@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   User as UserIcon,
   MapPin,
@@ -13,20 +14,26 @@ import {
   EyeOff,
   Calendar,
   CheckCircle2,
+  Star,
+  Package,
+  Edit2,
+  X,
+  Loader2,
 } from 'lucide-react';
 import { useAuth } from '../providers/AuthProvider';
 import { useToast } from '../context/ToastContext';
 import { userApi } from '../services/userApi';
 import { addressApi } from '../services/addressApi';
+import { reviewApi } from '../services/reviewApi';
 import AddressCard from '../components/address/AddressCard';
 import AddressModal from '../components/address/AddressModal';
-import { Address, CustomAxiosError } from '../types';
+import { Address, Review, CustomAxiosError } from '../types';
 
 export const ProfilePage: React.FC = () => {
   const { user, updateUser } = useAuth();
   const { showToast } = useToast();
 
-  const [activeTab, setActiveTab] = useState<'info' | 'address' | 'password'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'address' | 'password' | 'reviews'>('info');
 
   // State Tab Thông Tin
   const [profileForm, setProfileForm] = useState({
@@ -56,6 +63,40 @@ export const ProfilePage: React.FC = () => {
   const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
   const [isChangingPassword, setIsChangingPassword] = useState<boolean>(false);
+
+  // State Tab Đánh Giá
+  const [myReviews, setMyReviews] = useState<Review[]>([]);
+  const [isLoadingReviews, setIsLoadingReviews] = useState<boolean>(false);
+  const [reviewPage, setReviewPage] = useState<number>(1);
+  const [reviewTotalPages, setReviewTotalPages] = useState<number>(1);
+  const [reviewToEdit, setReviewToEdit] = useState<Review | null>(null);
+
+  // Load danh sách đánh giá của tôi
+  const fetchMyReviews = (page: number = 1) => {
+    setIsLoadingReviews(true);
+    reviewApi
+      .getMyReviews({ page, pageSize: 6 })
+      .then((res) => {
+        if (res.data) {
+          setMyReviews(res.data.items || res.data.content || []);
+          setReviewTotalPages(
+            res.data.pagination?.totalPages ?? res.data.totalPages ?? 1
+          );
+        }
+      })
+      .catch(() => {
+        showToast('Không thể tải danh sách đánh giá.', 'error');
+      })
+      .finally(() => {
+        setIsLoadingReviews(false);
+      });
+  };
+
+  useEffect(() => {
+    if (activeTab === 'reviews') {
+      fetchMyReviews(reviewPage);
+    }
+  }, [activeTab, reviewPage]);
 
   // Đồng bộ thông tin profile khi user thay đổi
   useEffect(() => {
@@ -327,6 +368,24 @@ export const ProfilePage: React.FC = () => {
           <Lock className="w-4 h-4" />
           <span>Đổi Mật Khẩu</span>
         </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('reviews')}
+          className={`flex items-center gap-2 px-5 py-3 text-sm font-bold border-b-2 transition-all duration-200 ${
+            activeTab === 'reviews'
+              ? 'border-emerald-600 text-emerald-600 bg-emerald-50/50 rounded-t-xl'
+              : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-gray-300'
+          }`}
+        >
+          <Star className="w-4 h-4" />
+          <span>Đánh Giá Của Tôi</span>
+          {myReviews.length > 0 && (
+            <span className="ml-1 px-2 py-0.5 text-xs bg-amber-100 text-amber-800 rounded-full font-extrabold">
+              {myReviews.length}
+            </span>
+          )}
+        </button>
       </div>
 
       {/* Nội dung Tab */}
@@ -577,6 +636,119 @@ export const ProfilePage: React.FC = () => {
             </button>
           </form>
         )}
+
+        {/* TAB 4: ĐÁNH GIÁ CỦA TÔI */}
+        {activeTab === 'reviews' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between border-b pb-4 border-gray-100">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  Lịch Sử Đánh Giá Sản Phẩm
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Tất cả nhận xét và đánh giá bạn đã viết cho các sản phẩm đã mua
+                </p>
+              </div>
+            </div>
+
+            {isLoadingReviews ? (
+              <div className="space-y-3 py-6">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-24 bg-slate-50 animate-pulse rounded-2xl" />
+                ))}
+              </div>
+            ) : myReviews.length === 0 ? (
+              <div className="text-center py-16 text-slate-400 space-y-3">
+                <Star className="w-12 h-12 mx-auto text-slate-300 stroke-1" />
+                <p className="text-sm font-bold text-slate-700">
+                  Bạn chưa có đánh giá nào
+                </p>
+                <p className="text-xs max-w-sm mx-auto">
+                  Sau khi nhận hàng thành công từ các đơn hàng, bạn có thể gửi đánh giá cho từng sản phẩm tại trang chi tiết đơn hàng.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {myReviews.map((rev) => (
+                  <div
+                    key={rev.id}
+                    className="p-4 border border-gray-100 rounded-2xl bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                  >
+                    <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                      {rev.productImageUrl ? (
+                        <img
+                          src={rev.productImageUrl}
+                          alt={rev.productName}
+                          className="w-14 h-14 rounded-xl object-cover bg-white flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-xl bg-slate-200 flex items-center justify-center flex-shrink-0">
+                          <Package className="w-6 h-6 text-slate-400" />
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <Link
+                          to={`/products/${rev.productId}`}
+                          className="text-xs font-bold text-slate-900 hover:text-emerald-600 transition-colors line-clamp-1"
+                        >
+                          {rev.productName}
+                        </Link>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center text-amber-400 text-xs">
+                            {[1, 2, 3, 4, 5].map((s) => (
+                              <span key={s}>{s <= rev.rating ? '★' : '☆'}</span>
+                            ))}
+                          </div>
+                          <span className="text-[11px] text-slate-400">
+                            {new Intl.DateTimeFormat('vi-VN', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                            }).format(new Date(rev.createdAt))}
+                          </span>
+                        </div>
+                        {rev.comment && (
+                          <p className="text-xs text-slate-600 mt-1 line-clamp-2">
+                            "{rev.comment}"
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setReviewToEdit(rev)}
+                      className="px-3 py-1.5 bg-white border border-gray-200 hover:border-emerald-500 hover:text-emerald-600 text-slate-600 text-xs font-bold rounded-xl transition-all shadow-xs flex items-center gap-1.5 flex-shrink-0"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                      Chỉnh sửa
+                    </button>
+                  </div>
+                ))}
+
+                {/* Pagination */}
+                {reviewTotalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 pt-4">
+                    {Array.from({ length: reviewTotalPages }, (_, i) => i + 1).map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setReviewPage(p)}
+                        className={`w-8 h-8 rounded-xl text-xs font-bold transition-all ${
+                          reviewPage === p
+                            ? 'bg-emerald-600 text-white shadow-sm'
+                            : 'bg-white border border-gray-200 text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Modal Thêm / Sửa địa chỉ */}
@@ -586,6 +758,138 @@ export const ProfilePage: React.FC = () => {
         onClose={() => setIsAddressModalOpen(false)}
         onSuccess={handleAddressSaved}
       />
+
+      {/* Modal Chỉnh Sửa Đánh Giá */}
+      {reviewToEdit && (
+        <EditReviewModal
+          review={reviewToEdit}
+          onSuccess={() => {
+            setReviewToEdit(null);
+            fetchMyReviews(reviewPage);
+          }}
+          onClose={() => setReviewToEdit(null)}
+        />
+      )}
+    </div>
+  );
+};
+
+// =============================================
+// Edit Review Modal Component
+// =============================================
+interface EditReviewModalProps {
+  review: Review;
+  onSuccess: () => void;
+  onClose: () => void;
+}
+
+const EditReviewModal: React.FC<EditReviewModalProps> = ({ review, onSuccess, onClose }) => {
+  const { showToast } = useToast();
+  const [rating, setRating] = useState<number>(review.rating);
+  const [hoverRating, setHoverRating] = useState<number>(0);
+  const [comment, setComment] = useState<string>(review.comment || '');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await reviewApi.updateReview(review.id, {
+        rating,
+        comment: comment.trim() || undefined,
+      });
+      showToast('Cập nhật đánh giá thành công!', 'success');
+      onSuccess();
+    } catch (error: unknown) {
+      const customError = error as CustomAxiosError;
+      showToast(
+        customError.response?.data?.message || 'Không thể cập nhật đánh giá.',
+        'error'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 space-y-5 animate-in fade-in zoom-in-95">
+        <div className="flex items-center justify-between border-b pb-3 border-gray-100">
+          <h2 className="text-base font-bold text-slate-900">Chỉnh Sửa Đánh Giá</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1 hover:bg-slate-100 rounded-lg text-slate-400"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <p className="text-xs font-bold text-slate-800 line-clamp-1">
+          {review.productName}
+        </p>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Star Picker */}
+          <div className="text-center space-y-1.5">
+            <div className="flex items-center justify-center gap-1.5">
+              {[1, 2, 3, 4, 5].map((star) => {
+                const active = (hoverRating || rating) >= star;
+                return (
+                  <button
+                    key={star}
+                    type="button"
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    onClick={() => setRating(star)}
+                    className="p-1 text-2xl transition-transform hover:scale-125 focus:outline-none"
+                  >
+                    <Star
+                      className={`w-7 h-7 ${
+                        active
+                          ? 'text-amber-400 fill-amber-400'
+                          : 'text-slate-300'
+                      }`}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1.5">
+              Nội dung nhận xét
+            </label>
+            <textarea
+              rows={4}
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Cập nhật cảm nhận của bạn về sản phẩm..."
+              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+              maxLength={1000}
+            />
+          </div>
+
+          <div className="flex gap-2 justify-end pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors"
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 flex items-center gap-1.5 transition-colors disabled:opacity-50"
+            >
+              {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              Lưu Thay Đổi
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

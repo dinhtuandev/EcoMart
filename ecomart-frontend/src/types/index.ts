@@ -588,4 +588,282 @@ export interface AdminProductFilterParams {
   isVisible?: boolean;
 }
 
+// ==========================================
+// MODULE 9: REVIEW, REPORT & INVENTORY TYPES
+// ==========================================
 
+/**
+ * Thực thể Đánh giá sản phẩm (Review)
+ */
+export interface Review {
+  id: number;
+  productId: number;
+  productName: string;
+  productImageUrl?: string;
+  orderItemId: number;
+  userId: number;
+  userFullName: string;
+  rating: number; // 1 - 5
+  comment?: string;
+  isVisible: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+/**
+ * Phân bổ số sao đánh giá
+ */
+export interface RatingBreakdown {
+  star5: number;
+  star4: number;
+  star3: number;
+  star2: number;
+  star1: number;
+}
+
+/**
+ * Tổng quan đánh giá sản phẩm (Public summary)
+ */
+export interface ProductReviewSummary {
+  averageRating: number;
+  reviewCount: number;
+  ratingBreakdown: RatingBreakdown;
+  reviews: PageResponse<Review>;
+}
+
+/**
+ * Payload tạo đánh giá mới (Customer)
+ */
+export interface CreateReviewPayload {
+  orderItemId: number;
+  rating: number;
+  comment?: string;
+}
+
+/**
+ * Payload cập nhật đánh giá (Customer)
+ */
+export interface UpdateReviewPayload {
+  rating: number;
+  comment?: string;
+}
+
+/**
+ * Payload cập nhật trạng thái hiển thị đánh giá (Admin)
+ */
+export interface UpdateReviewVisibilityPayload {
+  isVisible: boolean;
+}
+
+/**
+ * Tham số lọc đánh giá cho Admin
+ */
+export interface AdminReviewFilterParams {
+  page?: number;
+  pageSize?: number;
+  productId?: number;
+  rating?: number;
+  isVisible?: boolean;
+  keyword?: string;
+  fromDate?: string;
+  toDate?: string;
+}
+
+// --- REPORTS & DASHBOARD ---
+
+export type ReportGroupBy = 'DAY' | 'MONTH' | 'YEAR';
+
+/**
+ * Thống kê tổng quan Dashboard Admin
+ */
+export interface DashboardSummary {
+  totalRevenue: number;
+  totalOrders: number;
+  completedOrders: number;
+  pendingOrders: number;
+  confirmedOrders: number;
+  cancelledOrders: number;
+  totalCustomers: number;
+  totalProducts: number;
+  lowStockProducts: number;
+  newContactMessages: number;
+  recentOrders: Order[];
+}
+
+/**
+ * Điểm dữ liệu doanh thu theo kỳ
+ */
+export interface RevenuePeriodData {
+  period: string;
+  revenue: number;
+  orderCount: number;
+}
+
+/**
+ * Báo cáo doanh thu
+ */
+export interface RevenueReport {
+  totalRevenue: number;
+  totalCompletedOrders: number;
+  averageOrderValue: number;
+  groupBy: ReportGroupBy;
+  fromDate?: string;
+  toDate?: string;
+  items: RevenuePeriodData[];
+}
+
+/**
+ * Top sản phẩm bán chạy
+ */
+export interface TopSellingProduct {
+  productId: number;
+  productName: string;
+  productImageUrl?: string;
+  totalQuantitySold: number;
+  totalRevenue: number;
+}
+
+/**
+ * Doanh số theo danh mục
+ */
+export interface CategorySales {
+  categoryId: number;
+  categoryName: string;
+  quantitySold: number;
+  revenue: number;
+  percentage: number;
+}
+
+/**
+ * Doanh số theo thương hiệu
+ */
+export interface BrandSales {
+  brandId: number;
+  brandName: string;
+  quantitySold: number;
+  revenue: number;
+  percentage: number;
+}
+
+/**
+ * Cơ cấu phương thức thanh toán
+ */
+export interface PaymentMethodStats {
+  paymentMethod: PaymentMethod;
+  orderCount: number;
+  totalAmount: number;
+  percentage: number;
+}
+
+/**
+ * Cảnh báo tồn kho
+ */
+export interface InventoryAlert {
+  productId: number;
+  productName: string;
+  categoryName: string;
+  currentStock: number;
+  sellingPrice: number;
+  isOutOfStock: boolean;
+}
+
+/**
+ * Thống kê tác động sinh thái
+ */
+export interface EcoImpact {
+  averageEcoScore: number;
+  certifiedProductsSold: number;
+  highEcoScoreProductsSold: number;
+}
+
+/**
+ * Khách hàng VIP chi tiêu cao
+ */
+export interface TopCustomer {
+  userId: number;
+  fullName: string;
+  email: string;
+  phoneNumber?: string;
+  completedOrdersCount: number;
+  totalSpent: number;
+}
+
+/**
+ * Phân tích sức khỏe khách hàng
+ */
+export interface CustomerInsights {
+  totalCustomers: number;
+  activeCustomers: number;
+  inactiveCustomers: number;
+  payingCustomers: number;
+  repeatCustomers: number;
+  repeatPurchaseRate: number;
+  highRiskCustomers?: {
+    userId: number;
+    fullName: string;
+    email: string;
+    daysSinceLastOrder: number;
+    totalOrders: number;
+    totalSpent: number;
+  }[];
+}
+
+// --- INVENTORY MANAGEMENT ---
+
+/**
+ * Thực thể Tồn kho sản phẩm
+ */
+export interface InventoryItem {
+  id: number;
+  productId: number;
+  productName: string;
+  quantityInStock: number;
+  updatedAt?: string;
+}
+
+/**
+ * Payload cập nhật số lượng tồn kho
+ */
+export interface UpdateInventoryPayload {
+  quantityInStock: number;
+}
+
+// --- PAYMENT RETURN ---
+
+/**
+ * Kết quả trả về sau giao dịch VNPay
+ */
+export interface VNPayReturnResponse {
+  orderCode: string;
+  transactionNo: string;
+  amount: number;
+  bankCode: string;
+  cardType?: string;
+  orderInfo?: string;
+  payDate: string;
+  responseCode: string;
+  isSuccess: boolean;
+  message: string;
+}
+
+export interface CustomerGrowthData {
+  period: string;
+  newCustomersCount: number;
+}
+
+export interface CustomerGrowthResponse {
+  totalNewCustomers: number;
+  groupBy: ReportGroupBy;
+  fromDate?: string;
+  toDate?: string;
+  items: CustomerGrowthData[];
+}
+
+export interface ReviewInsightsResponse {
+  totalReviews: number;
+  visibleReviews: number;
+  hiddenReviews: number;
+  averagePlatformRating: number;
+  satisfactionRate: number;
+  ratingDistribution?: Record<number, number>;
+}

@@ -12,11 +12,14 @@ import {
   ShoppingCart,
   RotateCcw,
   Loader2,
+  Star,
+  X,
 } from 'lucide-react';
 import { orderApi } from '../services/orderApi';
+import { reviewApi } from '../services/reviewApi';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
-import { Order, OrderStatus, CustomAxiosError } from '../types';
+import { Order, OrderStatus, OrderItem, CustomAxiosError } from '../types';
 
 const formatCurrency = (amount: number): string =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount || 0);
@@ -75,6 +78,24 @@ export const OrderDetailPage: React.FC = () => {
   const [isCancelling, setIsCancelling] = useState<boolean>(false);
   const [isReordering, setIsReordering] = useState<boolean>(false);
 
+  // Review modal state
+  const [reviewingItem, setReviewingItem] = useState<OrderItem | null>(null);
+  const [reviewedOrderItemIds, setReviewedOrderItemIds] = useState<Set<number>>(new Set());
+
+  // Load user's reviewed order item IDs
+  useEffect(() => {
+    reviewApi
+      .getMyReviews({ page: 1, pageSize: 50 })
+      .then((res) => {
+        if (res.data) {
+          const items = res.data.items || res.data.content || [];
+          const ids = new Set<number>(items.map((r) => r.orderItemId));
+          setReviewedOrderItemIds(ids);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const fetchOrder = useCallback(async () => {
     if (!id) return;
     setIsLoading(true);
@@ -92,6 +113,11 @@ export const OrderDetailPage: React.FC = () => {
   useEffect(() => {
     fetchOrder();
   }, [fetchOrder]);
+
+  const handleReviewSubmitted = (orderItemId: number): void => {
+    setReviewedOrderItemIds((prev) => new Set([...prev, orderItemId]));
+    setReviewingItem(null);
+  };
 
   const handleCancelOrder = async (): Promise<void> => {
     if (!order) return;
@@ -304,36 +330,65 @@ export const OrderDetailPage: React.FC = () => {
           </div>
 
           <div className="divide-y divide-gray-50">
-            {order.items?.map((item) => (
-              <div key={item.id} className="p-4 flex items-center gap-3">
-                {item.productImageUrl ? (
-                  <img
-                    src={item.productImageUrl}
-                    alt={item.productName}
-                    className="w-14 h-14 rounded-xl object-cover bg-slate-100 flex-shrink-0"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                  />
-                ) : (
-                  <div className="w-14 h-14 rounded-xl bg-slate-100 flex-shrink-0 flex items-center justify-center">
-                    <Package className="w-6 h-6 text-slate-300" />
+            {order.items?.map((item) => {
+              const isReviewed = reviewedOrderItemIds.has(item.id);
+
+              return (
+                <div key={item.id} className="p-4 flex items-center gap-3">
+                  {item.productImageUrl ? (
+                    <img
+                      src={item.productImageUrl}
+                      alt={item.productName}
+                      className="w-14 h-14 rounded-xl object-cover bg-slate-100 flex-shrink-0"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div className="w-14 h-14 rounded-xl bg-slate-100 flex-shrink-0 flex items-center justify-center">
+                      <Package className="w-6 h-6 text-slate-300" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <Link
+                      to={`/products/${item.productId}`}
+                      className="text-xs font-bold text-slate-900 hover:text-emerald-600 transition-colors line-clamp-2"
+                    >
+                      {item.productName}
+                    </Link>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      {formatCurrency(item.unitPrice)} × {item.quantity}
+                    </p>
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <Link
-                    to={`/products/${item.productId}`}
-                    className="text-xs font-bold text-slate-900 hover:text-emerald-600 transition-colors line-clamp-2"
-                  >
-                    {item.productName}
-                  </Link>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
-                    {formatCurrency(item.unitPrice)} × {item.quantity}
-                  </p>
+
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <span className="text-xs font-extrabold text-slate-900">
+                      {formatCurrency(item.lineTotal)}
+                    </span>
+
+                    {/* Review Button for COMPLETED orders */}
+                    {order.status === 'COMPLETED' && (
+                      <div>
+                        {isReviewed ? (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg">
+                            <CheckCircle2 className="w-3 h-3" /> Đã đánh giá
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setReviewingItem(item)}
+                            className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-lg transition-colors"
+                          >
+                            <Star className="w-3 h-3 text-amber-500 fill-amber-400" />
+                            Đánh giá
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <span className="text-xs font-extrabold text-slate-900 flex-shrink-0">
-                  {formatCurrency(item.lineTotal)}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Tổng tiền */}
@@ -391,8 +446,176 @@ export const OrderDetailPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Review Modal */}
+      {reviewingItem && (
+        <ReviewModal
+          item={reviewingItem}
+          onSuccess={() => handleReviewSubmitted(reviewingItem.id)}
+          onClose={() => setReviewingItem(null)}
+        />
+      )}
+    </div>
+  );
+};
+
+// =============================================
+// Review Modal Component
+// =============================================
+interface ReviewModalProps {
+  item: OrderItem;
+  onSuccess: () => void;
+  onClose: () => void;
+}
+
+const ReviewModal: React.FC<ReviewModalProps> = ({ item, onSuccess, onClose }) => {
+  const { showToast } = useToast();
+  const [rating, setRating] = useState<number>(5);
+  const [hoverRating, setHoverRating] = useState<number>(0);
+  const [comment, setComment] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
+    e.preventDefault();
+    if (!rating || rating < 1) {
+      showToast('Vui lòng chọn số sao đánh giá.', 'warning');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await reviewApi.createReview({
+        orderItemId: item.id,
+        rating,
+        comment: comment.trim() || undefined,
+      });
+      showToast('Cảm ơn bạn đã gửi đánh giá cho sản phẩm!', 'success');
+      onSuccess();
+    } catch (error: unknown) {
+      const customError = error as CustomAxiosError;
+      showToast(
+        customError.response?.data?.message || 'Không thể gửi đánh giá.',
+        'error'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 space-y-5 animate-in fade-in zoom-in-95">
+        <div className="flex items-center justify-between border-b pb-3 border-gray-100">
+          <h2 className="text-base font-bold text-slate-900">Đánh Giá Sản Phẩm</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1 hover:bg-slate-100 rounded-lg text-slate-400"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Product preview */}
+        <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl">
+          {item.productImageUrl ? (
+            <img
+              src={item.productImageUrl}
+              alt={item.productName}
+              className="w-12 h-12 rounded-xl object-cover bg-white"
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-xl bg-slate-200 flex items-center justify-center">
+              <Package className="w-5 h-5 text-slate-400" />
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold text-slate-800 line-clamp-1">
+              {item.productName}
+            </p>
+            <p className="text-[11px] text-slate-400">Số lượng: {item.quantity}</p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Star Picker */}
+          <div className="text-center space-y-1.5">
+            <label className="block text-xs font-bold text-slate-700">
+              Mức độ hài lòng của bạn
+            </label>
+            <div className="flex items-center justify-center gap-1.5 pt-1">
+              {[1, 2, 3, 4, 5].map((star) => {
+                const active = (hoverRating || rating) >= star;
+                return (
+                  <button
+                    key={star}
+                    type="button"
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    onClick={() => setRating(star)}
+                    className="p-1 text-2xl transition-transform hover:scale-125 focus:outline-none"
+                    aria-label={`${star} sao`}
+                  >
+                    <Star
+                      className={`w-7 h-7 transition-colors ${
+                        active
+                          ? 'text-amber-400 fill-amber-400'
+                          : 'text-slate-300'
+                      }`}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[11px] font-semibold text-amber-600">
+              {rating === 5 && 'Tuyệt vời, sản phẩm rất tốt!'}
+              {rating === 4 && 'Hài lòng, sản phẩm ổn định'}
+              {rating === 3 && 'Bình thường, tạm được'}
+              {rating === 2 && 'Chưa hài lòng lắm'}
+              {rating === 1 && 'Rất tệ, không ưng ý'}
+            </p>
+          </div>
+
+          {/* Comment text */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1.5">
+              Nhận xét chi tiết (Tùy chọn)
+            </label>
+            <textarea
+              rows={4}
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Hãy chia sẻ trải nghiệm sử dụng, chất lượng vật liệu sinh thái của sản phẩm..."
+              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+              maxLength={1000}
+            />
+            <p className="text-[10px] text-right text-slate-400 mt-1">
+              {comment.length}/1000 ký tự
+            </p>
+          </div>
+
+          <div className="flex gap-2 justify-end pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors"
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 flex items-center gap-1.5 transition-colors disabled:opacity-50"
+            >
+              {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              Gửi Đánh Giá
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
 
 export default OrderDetailPage;
+

@@ -25,7 +25,9 @@ import AdminProductPage from '../pages/admin/AdminProductPage';
 import AdminCertificationPage from '../pages/admin/AdminCertificationPage';
 import AdminOrderPage from '../pages/admin/AdminOrderPage';
 import AdminOrderDetailPage from '../pages/admin/AdminOrderDetailPage';
+import AdminReviewPage from '../pages/admin/AdminReviewPage';
 import AdminUserPage from '../pages/admin/AdminUserPage';
+import VNPayReturnPage from '../pages/VNPayReturnPage';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -39,6 +41,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/products" element={<ProductListPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
         <Route path="/cart" element={<CartPage />} />
+        <Route path="/payment/vnpay/return" element={<VNPayReturnPage />} />
 
         {/* Customer Protected Routes */}
         <Route element={<ProtectedRoute allowedRoles={['CUSTOMER', 'ADMIN']} />}>
@@ -61,6 +64,7 @@ export const AppRoutes: React.FC = () => {
           <Route path="/admin/certifications" element={<AdminCertificationPage />} />
           <Route path="/admin/orders" element={<AdminOrderPage />} />
           <Route path="/admin/orders/:id" element={<AdminOrderDetailPage />} />
+          <Route path="/admin/reviews" element={<AdminReviewPage />} />
           <Route path="/admin/users" element={<AdminUserPage />} />
         </Route>
       </Route>

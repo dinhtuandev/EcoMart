@@ -13,10 +13,11 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { productApi } from '../services/productApi';
+import { reviewApi } from '../services/reviewApi';
 import { EcoScoreBadge } from '../components/product/EcoScoreBadge';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
-import { Product, ProductImage } from '../types';
+import { Product, ProductImage, ProductReviewSummary } from '../types';
 
 export const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -360,8 +361,240 @@ export const ProductDetailPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Product Reviews Section */}
+      <ProductReviewSection productId={product.id} />
+    </div>
+  );
+};
+
+// =============================================
+// Product Review Section Component
+// =============================================
+interface ProductReviewSectionProps {
+  productId: number;
+}
+
+const ProductReviewSection: React.FC<ProductReviewSectionProps> = ({ productId }) => {
+  const [summary, setSummary] = useState<ProductReviewSummary | null>(null);
+  const [selectedRating, setSelectedRating] = useState<number | undefined>(undefined);
+  const [page, setPage] = useState<number>(1);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoading(true);
+
+    reviewApi
+      .getProductReviews(productId, {
+        rating: selectedRating,
+        page,
+        pageSize: 5,
+      })
+      .then((res) => {
+        if (isMounted && res.data) {
+          setSummary(res.data);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [productId, selectedRating, page]);
+
+  const ratingBreakdown = summary?.ratingBreakdown;
+  const totalCount = summary?.reviewCount || 0;
+  const avgRating = summary?.averageRating || 0;
+  const reviewsList = summary?.reviews?.items || summary?.reviews?.content || [];
+  const totalPages =
+    summary?.reviews?.pagination?.totalPages ?? summary?.reviews?.totalPages ?? 1;
+
+  const calculatePercent = (count: number = 0): number => {
+    if (!totalCount || totalCount === 0) return 0;
+    return Math.round((count / totalCount) * 100);
+  };
+
+  const formatDate = (dateStr?: string): string => {
+    if (!dateStr) return '';
+    return new Intl.DateTimeFormat('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(new Date(dateStr));
+  };
+
+  return (
+    <div className="bg-white p-6 sm:p-10 rounded-3xl border border-gray-200/80 shadow-sm space-y-8">
+      <div className="flex items-center justify-between border-b pb-4 border-gray-100">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900">
+            Đánh Giá & Nhận Xét Từ Khách Hàng
+          </h2>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Nhận xét thực tế từ người mua đã trải nghiệm sản phẩm
+          </p>
+        </div>
+      </div>
+
+      {/* Rating Overview Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 bg-slate-50 rounded-2xl border border-slate-100">
+        {/* Left: Big Score */}
+        <div className="flex flex-col items-center justify-center text-center space-y-2 border-b md:border-b-0 md:border-r border-slate-200 pb-4 md:pb-0 md:pr-6">
+          <span className="text-5xl font-black text-slate-900">
+            {avgRating > 0 ? avgRating.toFixed(1) : '0.0'}
+          </span>
+          <div className="flex items-center gap-1 text-amber-400">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <span key={star} className="text-lg">
+                {star <= Math.round(avgRating) ? '★' : '☆'}
+              </span>
+            ))}
+          </div>
+          <p className="text-xs text-slate-500 font-medium">
+            Dựa trên {totalCount} lượt đánh giá
+          </p>
+        </div>
+
+        {/* Right: Breakdown Bars */}
+        <div className="md:col-span-2 space-y-2 justify-center flex flex-col">
+          {[
+            { star: 5, count: ratingBreakdown?.star5 ?? 0 },
+            { star: 4, count: ratingBreakdown?.star4 ?? 0 },
+            { star: 3, count: ratingBreakdown?.star3 ?? 0 },
+            { star: 2, count: ratingBreakdown?.star2 ?? 0 },
+            { star: 1, count: ratingBreakdown?.star1 ?? 0 },
+          ].map(({ star, count }) => {
+            const percent = calculatePercent(count);
+            return (
+              <div key={star} className="flex items-center gap-3 text-xs">
+                <span className="w-12 text-slate-600 font-bold flex items-center gap-1">
+                  {star} <span className="text-amber-400">★</span>
+                </span>
+                <div className="flex-1 h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-amber-400 rounded-full transition-all duration-300"
+                    style={{ width: `${percent}%` }}
+                  />
+                </div>
+                <span className="w-16 text-right text-slate-400 font-medium">
+                  {count} ({percent}%)
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="flex items-center gap-2 flex-wrap border-b border-gray-100 pb-4">
+        <span className="text-xs font-bold text-slate-700 mr-2">Lọc theo:</span>
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedRating(undefined);
+            setPage(1);
+          }}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            selectedRating === undefined
+              ? 'bg-slate-900 text-white shadow-sm'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          Tất cả ({totalCount})
+        </button>
+        {[5, 4, 3, 2, 1].map((r) => (
+          <button
+            key={r}
+            type="button"
+            onClick={() => {
+              setSelectedRating(r);
+              setPage(1);
+            }}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              selectedRating === r
+                ? 'bg-amber-500 text-white shadow-sm'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            {r} Sao
+          </button>
+        ))}
+      </div>
+
+      {/* Reviews List */}
+      {isLoading ? (
+        <div className="space-y-4 py-8">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-24 bg-slate-50 animate-pulse rounded-2xl" />
+          ))}
+        </div>
+      ) : reviewsList.length === 0 ? (
+        <div className="text-center py-12 text-slate-400 space-y-2">
+          <p className="text-sm font-medium">Chưa có đánh giá nào cho bộ lọc này.</p>
+          <p className="text-xs">
+            Hãy là người đầu tiên mua và chia sẻ cảm nhận về sản phẩm sinh thái này!
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4 divide-y divide-gray-100">
+          {reviewsList.map((rev) => (
+            <div key={rev.id} className="pt-4 first:pt-0 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-xs flex items-center justify-center flex-shrink-0">
+                    {rev.userFullName ? rev.userFullName.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-slate-900">
+                      {rev.userFullName || 'Khách hàng EcoMart'}
+                    </span>
+                    <p className="text-[10px] text-slate-400">{formatDate(rev.createdAt)}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center text-amber-400 text-xs">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <span key={s}>{s <= rev.rating ? '★' : '☆'}</span>
+                  ))}
+                </div>
+              </div>
+
+              {rev.comment && (
+                <p className="text-xs text-slate-700 leading-relaxed pl-10">
+                  {rev.comment}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-4">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setPage(p)}
+              className={`w-8 h-8 rounded-xl text-xs font-bold transition-all ${
+                page === p
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'bg-white border border-gray-200 text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
 
 export default ProductDetailPage;
+
