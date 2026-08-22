@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   FolderTree,
-  Tag,
+  Award,
   Package,
   Receipt,
   Users,
@@ -14,7 +14,7 @@ export const AdminSidebar: React.FC = () => {
   const navItems = [
     { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
     { path: '/admin/categories', label: 'Quản lý Danh mục', icon: FolderTree },
-    { path: '/admin/brands', label: 'Quản lý Thương hiệu', icon: Tag },
+    { path: '/admin/brands', label: 'Quản lý Thương hiệu', icon: Award },
     { path: '/admin/products', label: 'Quản lý Sản phẩm', icon: Package },
     { path: '/admin/orders', label: 'Quản lý Đơn hàng', icon: Receipt },
     { path: '/admin/users', label: 'Quản lý Người dùng', icon: Users },

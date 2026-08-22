@@ -19,6 +19,7 @@ import NotFoundPage from '../pages/NotFoundPage';
 
 import AdminDashboardPage from '../pages/AdminDashboardPage';
 import AdminCategoryPage from '../pages/admin/AdminCategoryPage';
+import AdminBrandPage from '../pages/admin/AdminBrandPage';
 import AdminProductPage from '../pages/AdminProductPage';
 import AdminOrderPage from '../pages/AdminOrderPage';
 import AdminUserPage from '../pages/admin/AdminUserPage';
@@ -51,6 +52,7 @@ export const AppRoutes: React.FC = () => {
         <Route element={<AdminLayout />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/categories" element={<AdminCategoryPage />} />
+          <Route path="/admin/brands" element={<AdminBrandPage />} />
           <Route path="/admin/products" element={<AdminProductPage />} />
           <Route path="/admin/orders" element={<AdminOrderPage />} />
           <Route path="/admin/users" element={<AdminUserPage />} />

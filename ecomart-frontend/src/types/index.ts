@@ -282,3 +282,29 @@ export interface CategoryPayload {
   description?: string;
   isActive?: boolean;
 }
+
+// ==========================================
+// MODULE 5: BRAND MANAGEMENT TYPES
+// ==========================================
+
+/**
+ * Thực thể Thương hiệu đối tác
+ */
+export interface Brand {
+  id: number;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Payload Thêm / Sửa Thương hiệu
+ */
+export interface BrandPayload {
+  name: string;
+  description?: string;
+  isActive?: boolean;
+}
+
