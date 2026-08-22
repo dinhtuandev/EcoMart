@@ -59,14 +59,18 @@
 ---
 
 ## 📂 Module 4 & 5: Category & Brand Management
-- [ ] **4.1. API Services**:
-  - [ ] `src/services/categoryApi.js`: `getCategories`, `getActiveCategories`, `adminCreateCategory`, `adminUpdateCategory`, `adminToggleCategory`, `adminDeleteCategory`.
-  - [ ] `src/services/brandApi.js`: `getBrands`, `getActiveBrands`, `adminCreateBrand`, `adminUpdateBrand`, `adminToggleBrand`, `adminDeleteBrand`.
-- [ ] **4.2. Giao diện Người Dùng & Admin**:
-  - [ ] `src/components/common/Header.jsx`: Menu điều hướng danh mục phân cấp đa tầng (Parent / Subcategories).
-  - [ ] `src/pages/admin/AdminCategoryPage.jsx`: CRUD danh mục, chọn danh mục cha, tự động sinh slug SEO, toggle ẩn/hiện.
-  - [ ] `src/pages/admin/AdminBrandPage.jsx`: CRUD thương hiệu đối tác, toggle hoạt động, kiểm tra an toàn trước khi xóa.
-- [ ] **Git Commit**: `feat(fe-category-brand): Implement Module 4 & 5 Category and Brand management for User & Admin`
+- [x] **4.1. API Services**:
+  - [x] `src/services/categoryApi.ts`: `getCategories`, `adminGetCategories`, `adminCreateCategory`, `adminUpdateCategory`.
+  - [x] `src/services/brandApi.ts`: `getBrands`, `adminGetBrands`, `adminCreateBrand`, `adminUpdateBrand`.
+  - [x] `src/hooks/usePublicCategories.ts` & `src/hooks/usePublicBrands.ts`: In-memory caching chống gọi API lặp.
+- [x] **4.2. Giao diện Người Dùng & Admin**:
+  - [x] `src/components/layout/Header.tsx`: Menu điều hướng và Dropdown danh mục sinh thái phân cấp.
+  - [x] `src/pages/admin/AdminCategoryPage.tsx`: 3 Cards thống kê, Debounce 300ms search, filter tabs, bảng xen kẽ màu, Optimistic Update toggle `isActive`, CategoryModal.
+  - [x] `src/pages/admin/AdminBrandPage.tsx`: 3 Cards thống kê, Debounce 300ms search, filter tabs, bảng xen kẽ màu, Optimistic Update toggle `isActive`, BrandModal.
+  - [x] `src/components/layout/AdminSidebar.tsx`: Menu item `Quản lý Danh mục` (`FolderTree`) và `Quản lý Thương hiệu` (`Award`).
+- [x] **Git Commits**:
+  - `feat(fe-category): Implement Module 4 Category Management with Debounced Search and Optimistic status toggle`
+  - `feat(fe-brand): Implement Module 5 Brand Management with Debounced Search and Optimistic status toggle`
 
 ---
 
