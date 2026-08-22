@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import AdminSidebar from './AdminSidebar';
 
-const AdminLayout = () => {
+export const AdminLayout: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-slate-100 text-slate-800">
       <Header />

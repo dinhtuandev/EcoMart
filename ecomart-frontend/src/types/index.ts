@@ -562,6 +562,201 @@ export interface ProductPayload {
 
 /**
  * Tham số lọc sản phẩm cho Khách hàng (Public Catalog)
+  isActive: boolean;
+}
+
+/**
+ * Tham số lọc danh sách người dùng cho Admin
+ */
+export interface AdminUsersFilterParams {
+  keyword?: string;
+  isActive?: boolean;
+  page?: number;
+  pageSize?: number;
+}
+
+// ==========================================
+// MODULE 3: ADDRESS MANAGEMENT TYPES
+// ==========================================
+
+/**
+ * Thực thể Địa chỉ nhận hàng
+ */
+export interface Address {
+  id: number;
+  recipientName: string;
+  recipientPhone: string;
+  province: string;
+  district: string;
+  ward: string;
+  addressDetail: string;
+  isDefault: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  // Aliases cho các component cũ nếu có
+  receiverName?: string;
+  receiverPhone?: string;
+  detailAddress?: string;
+}
+
+/**
+ * Payload Thêm / Sửa địa chỉ nhận hàng
+ */
+export interface AddressPayload {
+  recipientName: string;
+  recipientPhone: string;
+  province: string;
+  district: string;
+  ward: string;
+  addressDetail: string;
+  isDefault?: boolean;
+  // Aliases
+  receiverName?: string;
+  receiverPhone?: string;
+  detailAddress?: string;
+}
+
+// ==========================================
+// MODULE 4: CATEGORY MANAGEMENT TYPES
+// ==========================================
+
+/**
+ * Thực thể Danh mục sản phẩm
+ */
+export interface Category {
+  id: number;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Payload Thêm / Sửa Danh mục sản phẩm
+ */
+export interface CategoryPayload {
+  name: string;
+  description?: string;
+  isActive?: boolean;
+}
+
+// ==========================================
+// MODULE 5: BRAND MANAGEMENT TYPES
+// ==========================================
+
+/**
+ * Thực thể Thương hiệu đối tác
+ */
+export interface Brand {
+  id: number;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Payload Thêm / Sửa Thương hiệu
+ */
+export interface BrandPayload {
+  name: string;
+  description?: string;
+  isActive?: boolean;
+}
+
+// ==========================================
+// MODULE 6: PRODUCT & CERTIFICATION TYPES
+// ==========================================
+
+/**
+ * Thực thể Hình ảnh sản phẩm
+ */
+export interface ProductImage {
+  id: number;
+  imageUrl: string;
+  isPrimary: boolean;
+  displayOrder: number;
+  createdAt?: string;
+}
+
+/**
+ * Payload Thêm / Sửa hình ảnh sản phẩm
+ */
+export interface ProductImagePayload {
+  url: string;
+  isPrimary?: boolean;
+  displayOrder?: number;
+}
+
+/**
+ * Thực thể Chứng nhận sinh thái (Eco Certification)
+ */
+export interface Certification {
+  id: number;
+  name: string;
+  description?: string;
+  iconUrl?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Payload Thêm / Sửa Chứng nhận sinh thái
+ */
+export interface CertificationPayload {
+  name: string;
+  description?: string;
+  iconUrl?: string;
+  isActive?: boolean;
+}
+
+/**
+ * Thực thể Sản phẩm (Product)
+ */
+export interface Product {
+  id: number;
+  name: string;
+  description?: string;
+  sellingPrice: number;
+  originalPrice?: number;
+  ecoScore: number; // 1 to 5
+  materialInfo?: string;
+  isVisible: boolean;
+  category: Category;
+  brand: Brand;
+  certifications?: Certification[];
+  images?: ProductImage[];
+  quantityInStock: number;
+  createdAt: string;
+  updatedAt: string;
+  // Fallbacks
+  averageRating?: number;
+  reviewCount?: number;
+}
+
+/**
+ * Payload Thêm / Sửa Sản phẩm
+ */
+export interface ProductPayload {
+  name: string;
+  categoryId: number;
+  brandId: number;
+  sellingPrice: number;
+  originalPrice?: number;
+  ecoScore?: number;
+  materialInfo?: string;
+  certificationIds?: number[];
+  description?: string;
+  isVisible?: boolean;
+  quantityInStock?: number;
+  images?: ProductImagePayload[];
+}
+
+/**
+ * Tham số lọc sản phẩm cho Khách hàng (Public Catalog)
  */
 export interface ProductFilterParams {
   page?: number;
@@ -866,4 +1061,90 @@ export interface ReviewInsightsResponse {
   averagePlatformRating: number;
   satisfactionRate: number;
   ratingDistribution?: Record<number, number>;
+}
+
+// ==========================================
+// MODULE 10: CONTENT, CONTACT & STORE SETTINGS
+// ==========================================
+
+/**
+ * Cấu hình thông tin cửa hàng
+ */
+export interface StoreSetting {
+  storePhone: string;
+  storeEmail: string;
+  storeAddress: string;
+  mapEmbedUrl: string;
+}
+
+/**
+ * Payload cập nhật cấu hình cửa hàng
+ */
+export interface UpdateStoreSettingPayload {
+  storePhone?: string;
+  storeEmail?: string;
+  storeAddress?: string;
+  mapEmbedUrl?: string;
+}
+
+/**
+ * Trang nội dung / chính sách
+ */
+export interface ContentPage {
+  id: number;
+  slug: string;
+  title: string;
+  content: string;
+  updatedAt: string;
+}
+
+/**
+ * Payload cập nhật trang nội dung
+ */
+export interface UpdateContentPagePayload {
+  title: string;
+  content: string;
+}
+
+/**
+ * Trạng thái xử lý tin nhắn liên hệ
+ */
+export type ContactStatus = 'PENDING' | 'RESOLVED';
+
+/**
+ * Tin nhắn liên hệ của khách hàng
+ */
+export interface ContactMessage {
+  id: number;
+  fullName: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  content: string;
+  status: ContactStatus;
+  createdAt: string;
+  resolvedAt?: string | null;
+}
+
+/**
+ * Payload gửi tin nhắn liên hệ
+ */
+export interface CreateContactMessagePayload {
+  fullName: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  content: string;
+}
+
+/**
+ * Tham số lọc tin nhắn liên hệ cho Admin
+ */
+export interface AdminContactFilterParams {
+  page?: number;
+  pageSize?: number;
+  status?: ContactStatus;
+  keyword?: string;
+  fromDate?: string;
+  toDate?: string;
 }

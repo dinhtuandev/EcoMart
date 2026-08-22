@@ -126,6 +126,10 @@ export const Header: React.FC = () => {
             Sản phẩm
           </Link>
 
+          <Link to="/contact" className="hover:text-emerald-600 transition-colors">
+            Liên hệ
+          </Link>
+
           {isAdmin && (
             <Link
               to="/admin"

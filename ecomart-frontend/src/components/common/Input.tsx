@@ -1,6 +1,19 @@
 import React from 'react';
 
-const Input = ({
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  id?: string;
+  type?: string;
+  error?: string;
+  placeholder?: string;
+  value?: string | number;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  className?: string;
+  required?: boolean;
+  ariaLabel?: string;
+}
+
+export const Input: React.FC<InputProps> = ({
   label,
   id,
   type = 'text',
@@ -13,7 +26,7 @@ const Input = ({
   ariaLabel,
   ...props
 }) => {
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     if (onChange) {
       onChange(e);
     }
@@ -33,8 +46,11 @@ const Input = ({
         onChange={handleChange}
         placeholder={placeholder}
         aria-label={ariaLabel || label || id}
-        className={`w-full px-3 py-2 border rounded-lg shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-          error ? 'border-rose-500 text-rose-900 placeholder-rose-300' : 'border-slate-300 text-slate-900'
+        tabIndex={0}
+        className={`w-full px-3 py-2 border rounded-lg shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${
+          error
+            ? 'border-rose-500 text-rose-900 placeholder-rose-300'
+            : 'border-slate-300 text-slate-900'
         } ${className}`}
         {...props}
       />

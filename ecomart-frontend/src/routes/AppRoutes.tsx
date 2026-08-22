@@ -16,6 +16,8 @@ import CheckoutPage from '../pages/CheckoutPage';
 import OrderHistoryPage from '../pages/OrderHistoryPage';
 import OrderDetailPage from '../pages/OrderDetailPage';
 import ProfilePage from '../pages/ProfilePage';
+import ContactPage from '../pages/ContactPage';
+import ContentPage from '../pages/ContentPage';
 import NotFoundPage from '../pages/NotFoundPage';
 
 import AdminDashboardPage from '../pages/AdminDashboardPage';
@@ -27,6 +29,8 @@ import AdminOrderPage from '../pages/admin/AdminOrderPage';
 import AdminOrderDetailPage from '../pages/admin/AdminOrderDetailPage';
 import AdminReviewPage from '../pages/admin/AdminReviewPage';
 import AdminUserPage from '../pages/admin/AdminUserPage';
+import AdminContentPage from '../pages/admin/AdminContentPage';
+import AdminSettingsPage from '../pages/admin/AdminSettingsPage';
 import VNPayReturnPage from '../pages/VNPayReturnPage';
 
 export const AppRoutes: React.FC = () => {
@@ -41,6 +45,8 @@ export const AppRoutes: React.FC = () => {
         <Route path="/products" element={<ProductListPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
         <Route path="/cart" element={<CartPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/pages/:slug" element={<ContentPage />} />
         <Route path="/payment/vnpay/return" element={<VNPayReturnPage />} />
 
         {/* Customer Protected Routes */}
@@ -66,6 +72,8 @@ export const AppRoutes: React.FC = () => {
           <Route path="/admin/orders/:id" element={<AdminOrderDetailPage />} />
           <Route path="/admin/reviews" element={<AdminReviewPage />} />
           <Route path="/admin/users" element={<AdminUserPage />} />
+          <Route path="/admin/content" element={<AdminContentPage />} />
+          <Route path="/admin/settings" element={<AdminSettingsPage />} />
         </Route>
       </Route>
     </Routes>

@@ -1,17 +1,24 @@
 import React from 'react';
 
-const Modal = ({ isOpen, onClose, title, children }) => {
+export interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+}
+
+export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) {
     return null;
   }
 
-  const handleBackdropClick = (e) => {
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>): void => {
     if (e.target === e.currentTarget) {
       onClose();
     }
   };
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>): void => {
     if (e.key === 'Escape') {
       onClose();
     }
@@ -32,6 +39,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
           <button
             onClick={onClose}
             aria-label="Đóng modal"
+            tabIndex={0}
             className="text-slate-400 hover:text-slate-600 rounded-lg p-1 transition-colors"
           >
             ✕

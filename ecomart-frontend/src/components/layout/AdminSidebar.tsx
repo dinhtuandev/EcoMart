@@ -10,6 +10,8 @@ import {
   Users,
   Sparkles,
   Star,
+  FileText,
+  Settings,
 } from 'lucide-react';
 
 export const AdminSidebar: React.FC = () => {
@@ -22,6 +24,8 @@ export const AdminSidebar: React.FC = () => {
     { path: '/admin/orders', label: 'Quản lý Đơn hàng', icon: Receipt },
     { path: '/admin/reviews', label: 'Quản lý Đánh giá', icon: Star },
     { path: '/admin/users', label: 'Quản lý Người dùng', icon: Users },
+    { path: '/admin/content', label: 'Nội Dung Trang', icon: FileText },
+    { path: '/admin/settings', label: 'Cài Đặt', icon: Settings },
   ];
 
   return (

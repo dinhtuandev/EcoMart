@@ -1,17 +1,27 @@
 import React from 'react';
 
-const Pagination = ({ currentPage = 1, totalPages = 1, onPageChange }) => {
+export interface PaginationProps {
+  currentPage?: number;
+  totalPages?: number;
+  onPageChange: (page: number) => void;
+}
+
+export const Pagination: React.FC<PaginationProps> = ({
+  currentPage = 1,
+  totalPages = 1,
+  onPageChange,
+}) => {
   if (totalPages <= 1) {
     return null;
   }
 
-  const handlePrevious = () => {
+  const handlePrevious = (): void => {
     if (currentPage > 1) {
       onPageChange(currentPage - 1);
     }
   };
 
-  const handleNext = () => {
+  const handleNext = (): void => {
     if (currentPage < totalPages) {
       onPageChange(currentPage + 1);
     }
@@ -23,6 +33,7 @@ const Pagination = ({ currentPage = 1, totalPages = 1, onPageChange }) => {
         onClick={handlePrevious}
         disabled={currentPage === 1}
         aria-label="Trang trước"
+        tabIndex={0}
         className="px-3 py-1.5 rounded-md text-sm border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Trang trước
@@ -36,6 +47,7 @@ const Pagination = ({ currentPage = 1, totalPages = 1, onPageChange }) => {
         onClick={handleNext}
         disabled={currentPage === totalPages}
         aria-label="Trang tiếp"
+        tabIndex={0}
         className="px-3 py-1.5 rounded-md text-sm border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Trang tiếp
