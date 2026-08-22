@@ -1,58 +1,92 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { cartApi } from '../services/cartApi';
+import { useAuth } from './AuthContext';
 
 const CartContext = createContext(null);
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState(() => {
-    const savedCart = localStorage.getItem('techhub_cart');
-    return savedCart ? JSON.parse(savedCart) : [];
-  });
+  const { isAuthenticated } = useAuth();
+  const [cart, setCart] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    localStorage.setItem('techhub_cart', JSON.stringify(cartItems));
-  }, [cartItems]);
-
-  const handleAddToCart = (product, quantity = 1) => {
-    setCartItems((prevItems) => {
-      const existingIndex = prevItems.findIndex((item) => item.id === product.id);
-      if (existingIndex > -1) {
-        const updated = [...prevItems];
-        updated[existingIndex].quantity += quantity;
-        return updated;
-      }
-      return [...prevItems, { ...product, quantity }];
-    });
-  };
-
-  const handleRemoveFromCart = (productId) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== productId));
-  };
-
-  const handleUpdateQuantity = (productId, quantity) => {
-    if (quantity <= 0) {
-      handleRemoveFromCart(productId);
+  const fetchCart = async () => {
+    if (!isAuthenticated) {
+      setCart(null);
       return;
     }
-    setCartItems((prevItems) =>
-      prevItems.map((item) => (item.id === productId ? { ...item, quantity } : item))
-    );
+    setLoading(true);
+    try {
+      const res = await cartApi.getCart();
+      if (res.success) {
+        setCart(res.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch cart:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleClearCart = () => {
-    setCartItems([]);
+  useEffect(() => {
+    fetchCart();
+  }, [isAuthenticated]);
+
+  const handleAddToCart = async (productId, quantity = 1) => {
+    if (!isAuthenticated) return false;
+    setLoading(true);
+    try {
+      const res = await cartApi.addToCart({ productId, quantity });
+      if (res.success) {
+        setCart(res.data);
+        return true;
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Không thể thêm sản phẩm vào giỏ hàng');
+    } finally {
+      setLoading(false);
+    }
+    return false;
   };
 
-  const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
-  const totalPrice = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const handleUpdateQuantity = async (cartItemId, quantity) => {
+    setLoading(true);
+    try {
+      const res = await cartApi.updateCartItem(cartItemId, { quantity });
+      if (res.success) {
+        setCart(res.data);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Không thể cập nhật số lượng');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveFromCart = async (cartItemId) => {
+    setLoading(true);
+    try {
+      await cartApi.removeCartItem(cartItemId);
+      await fetchCart();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Không thể xóa sản phẩm khỏi giỏ');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const totalItems = cart?.items?.reduce((acc, item) => acc + item.quantity, 0) || 0;
+  const totalPrice = cart?.totalAmount || 0;
 
   const value = {
-    cartItems,
+    cart,
+    cartItems: cart?.items || [],
     totalItems,
     totalPrice,
+    loading,
+    fetchCart,
     handleAddToCart,
     handleRemoveFromCart,
     handleUpdateQuantity,
-    handleClearCart,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
