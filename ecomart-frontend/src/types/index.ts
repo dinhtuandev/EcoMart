@@ -226,24 +226,59 @@ export interface AdminUsersFilterParams {
  */
 export interface Address {
   id: number;
-  receiverName: string;
-  receiverPhone: string;
+  recipientName: string;
+  recipientPhone: string;
   province: string;
   district: string;
   ward: string;
-  detailAddress: string;
+  addressDetail: string;
   isDefault: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  // Aliases cho các component cũ nếu có
+  receiverName?: string;
+  receiverPhone?: string;
+  detailAddress?: string;
 }
 
 /**
  * Payload Thêm / Sửa địa chỉ nhận hàng
  */
 export interface AddressPayload {
-  receiverName: string;
-  receiverPhone: string;
+  recipientName: string;
+  recipientPhone: string;
   province: string;
   district: string;
   ward: string;
-  detailAddress: string;
+  addressDetail: string;
   isDefault?: boolean;
+  // Aliases
+  receiverName?: string;
+  receiverPhone?: string;
+  detailAddress?: string;
+}
+
+// ==========================================
+// MODULE 4: CATEGORY MANAGEMENT TYPES
+// ==========================================
+
+/**
+ * Thực thể Danh mục sản phẩm
+ */
+export interface Category {
+  id: number;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Payload Thêm / Sửa Danh mục sản phẩm
+ */
+export interface CategoryPayload {
+  name: string;
+  description?: string;
+  isActive?: boolean;
 }

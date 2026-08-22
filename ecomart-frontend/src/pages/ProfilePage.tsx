@@ -184,15 +184,15 @@ export const ProfilePage: React.FC = () => {
 
     try {
       await addressApi.updateAddress(address.id, {
-        receiverName: address.receiverName,
-        receiverPhone: address.receiverPhone,
+        recipientName: address.recipientName,
+        recipientPhone: address.recipientPhone,
         province: address.province,
         district: address.district,
         ward: address.ward,
-        detailAddress: address.detailAddress,
+        addressDetail: address.addressDetail,
         isDefault: true,
       });
-      showToast(`Đã đặt địa chỉ "${address.receiverName}" làm mặc định.`, 'success');
+      showToast(`Đã đặt địa chỉ "${address.recipientName}" làm mặc định.`, 'success');
     } catch (error: unknown) {
       const customError = error as CustomAxiosError;
       showToast(customError.response?.data?.message || 'Không thể đặt mặc định.', 'error');
