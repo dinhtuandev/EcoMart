@@ -75,17 +75,20 @@
 ---
 
 ## 🌿 Module 6: Product Catalog, Images, Inventory & Green Certifications
-- [ ] **6.1. API Services**:
-  - [ ] `src/services/productApi.js`: `getProducts` (Filter, Search, Sort, Pagination), `getProductById`, `adminCreateProduct`, `adminUpdateProduct`, `adminToggleProduct`, `adminUploadImages`.
-  - [ ] `src/services/certificationApi.js`: `getCertifications`, `adminCreateCert`, `adminUpdateCert`, `adminDeleteCert`.
-- [ ] **6.2. Màn hình Khách Hàng (Customer Portal)**:
-  - [ ] `src/components/product/ProductCard.jsx`: Card sản phẩm hiện đại, thumbnail, giá bán, giá cũ gạch ngang (% giảm), **Badge Eco-Score (1-5 lá xanh)**, tag chứng nhận, nút thêm giỏ nhanh.
-  - [ ] `src/pages/ProductListPage.jsx`: Bộ lọc Sidebar đa tiêu chí (Danh mục, Hãng, Khoảng giá slider, **Chứng nhận Nhãn Xanh**, **Điểm Eco-Score tối thiểu**), Thanh sắp xếp, Phân trang Pagination, Search keyword.
-  - [ ] `src/pages/ProductDetailPage.jsx`: Gallery ảnh lớn/thumbnail, thông số vật liệu xanh, danh sách chứng nhận sinh thái, bộ chọn số lượng có kiểm tra tồn kho, tabs mô tả và đánh giá.
-- [ ] **6.3. Màn hình Quản Trị (Admin Portal)**:
-  - [ ] `src/pages/admin/AdminProductPage.jsx`: Form thêm/sửa sản phẩm đầy đủ (Tên, Giá, Giá cũ, Điểm Eco-Score 1-5, Vật liệu, Multi-select chứng nhận xanh, Gallery ảnh, Toggle ẩn/hiện).
-  - [ ] `src/pages/admin/AdminCertificationPage.jsx`: Quản lý chứng nhận sinh thái Eco (Tên, Mã, Đơn vị cấp, Icon).
-- [ ] **Git Commit**: `feat(fe-catalog): Implement Module 6 Product catalog, eco-score filters, details and certification admin`
+- [x] **6.1. API Services**:
+  - [x] `src/services/productApi.ts`: `getProducts`, `getProductDetail`, `adminGetProducts`, `adminGetProductDetail`, `adminCreateProduct`, `adminUpdateProduct`, `adminUpdateProductImages`.
+  - [x] `src/services/certificationApi.ts`: `getCertifications`, `adminGetCertifications`, `adminCreateCertification`, `adminUpdateCertification`.
+  - [x] `src/hooks/usePublicCertifications.ts`: In-memory caching chống gọi lặp API.
+- [x] **6.2. Màn hình Khách Hàng (Customer Portal)**:
+  - [x] `src/components/product/EcoScoreBadge.tsx`: Badge hiển thị 1-5 lá xanh và mức độ sinh thái.
+  - [x] `src/components/product/ProductCard.tsx`: Card sản phẩm hiện đại, thumbnail, giá bán, giá cũ gạch ngang (% giảm), Badge Eco-Score, tag chứng nhận, nút thêm giỏ nhanh.
+  - [x] `src/pages/ProductListPage.tsx`: Bộ lọc Sidebar đa tiêu chí (Danh mục, Hãng, Chứng nhận Nhãn Xanh, Điểm Eco-Score 1-5, Khoảng giá), Sắp xếp, Phân trang Pagination, Global 300ms Debounced Search.
+  - [x] `src/pages/ProductDetailPage.tsx`: Gallery ảnh thumbnail switcher, thông số vật liệu xanh, danh sách chứng nhận sinh thái, bộ chọn số lượng kiểm tra tồn kho, tabs mô tả.
+- [x] **6.3. Màn hình Quản Trị (Admin Portal)**:
+  - [x] `src/pages/admin/AdminProductPage.tsx`: 4 Cards KPI kho hàng, tìm kiếm debounce 300ms, lọc Category & Brand, table xen kẽ màu, toggle `isVisible` với Optimistic Update.
+  - [x] `src/components/product/AdminProductModal.tsx`: Form thêm/sửa sản phẩm toàn diện (Tên, Giá, Giá gốc, Tồn kho, Điểm Eco-Score 1-5, Vật liệu, Multi-select Chứng nhận xanh, Danh sách URL ảnh).
+  - [x] `src/pages/admin/AdminCertificationPage.tsx` & `CertificationModal.tsx`: CRUD chứng nhận sinh thái nhãn xanh (FSC, USDA, Fair Trade...).
+- [x] **Git Commit**: `feat(fe-catalog): Implement Module 6 Product catalog, eco-score badges, details and green certification admin`
 
 ---
 
