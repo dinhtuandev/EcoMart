@@ -14,7 +14,7 @@ import { usePublicCategories } from '../../hooks/usePublicCategories';
 
 export const Header: React.FC = () => {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
-  const { totalItems } = useCart();
+  const { totalQuantity } = useCart();
   const { categories, isLoading: isLoadingCats } = usePublicCategories();
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -146,9 +146,9 @@ export const Header: React.FC = () => {
             aria-label="Giỏ hàng"
           >
             <ShoppingCart className="w-5 h-5" />
-            {totalItems > 0 && (
-              <span className="absolute -top-1 -right-1 bg-emerald-600 text-white text-[10px] font-black rounded-full h-4 w-4 flex items-center justify-center shadow-sm">
-                {totalItems}
+            {totalQuantity > 0 && (
+              <span className="absolute -top-1 -right-1 bg-emerald-600 text-white text-[10px] font-black rounded-full min-w-[1.25rem] h-5 px-1 flex items-center justify-center shadow-md">
+                {totalQuantity > 99 ? '99+' : totalQuantity}
               </span>
             )}
           </Link>

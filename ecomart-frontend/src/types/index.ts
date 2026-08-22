@@ -48,36 +48,46 @@ export interface PageResponse<T> {
 }
 
 /**
- * Thực thể Giỏ hàng & Sản phẩm trong giỏ
+ * Thực thể Sản phẩm trong Giỏ hàng (Dữ liệu thô từ Backend)
  */
 export interface CartItem {
-  id: number;
+  id: number; // cartItemId
   productId: number;
   productName: string;
-  productImage?: string;
-  price: number;
+  productImageUrl?: string;
+  sellingPrice: number;
+  originalPrice?: number;
   quantity: number;
-  totalPrice: number;
-  product?: Product;
+  quantityInStock: number;
+  isAvailable: boolean;
+  isVisible?: boolean;
 }
 
+/**
+ * Thực thể Giỏ hàng (Chỉ chứa id và mảng items, các giá trị khác Frontend tự tính)
+ */
 export interface Cart {
   id: number;
   items: CartItem[];
-  totalAmount: number;
+  updatedAt?: string;
 }
 
+/**
+ * Context Interface cho Giỏ hàng
+ */
 export interface CartContextType {
   cart: Cart | null;
   cartItems: CartItem[];
-  totalItems: number;
-  totalPrice: number;
+  totalQuantity: number;
+  totalAmount: number;
   loading: boolean;
   fetchCart: () => Promise<void>;
   handleAddToCart: (productId: number, quantity?: number) => Promise<boolean>;
+  handleLocalQuantityChange: (cartItemId: number, newQuantity: number) => void;
   handleRemoveFromCart: (cartItemId: number) => Promise<void>;
-  handleUpdateQuantity: (cartItemId: number, quantity: number) => Promise<void>;
+  handleClearCart: () => Promise<void>;
 }
+
 
 
 /**
