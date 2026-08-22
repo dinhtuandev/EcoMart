@@ -16,6 +16,7 @@ import { orderApi } from '../services/orderApi';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { Address, CartItem, PaymentMethod, CustomAxiosError } from '../types';
+import { VietQrModal } from '../components/payment/VietQrModal';
 
 interface CheckoutLocationState {
   selectedCartItemIds?: number[];
@@ -84,15 +85,21 @@ export const CheckoutPage: React.FC = () => {
   // Phương thức thanh toán
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD');
 
-  // Submit
+  // Submit & VietQR Modal State
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [createdOrderForQr, setCreatedOrderForQr] = useState<{
+    id: number;
+    orderCode: string;
+    amount: number;
+  } | null>(null);
+  const [isVietQrOpen, setIsVietQrOpen] = useState<boolean>(false);
 
   // Redirect về cart nếu không có item nào
   useEffect(() => {
-    if (!isLoadingAddr && cartItems.length === 0) {
+    if (!isLoadingAddr && cartItems.length === 0 && !isVietQrOpen) {
       navigate('/cart');
     }
-  }, [cartItems, isLoadingAddr, navigate]);
+  }, [cartItems, isLoadingAddr, isVietQrOpen, navigate]);
 
   // Load địa chỉ
   useEffect(() => {
@@ -138,6 +145,16 @@ export const CheckoutPage: React.FC = () => {
       if (paymentMethod === 'VNPAY' && paymentUrl) {
         // Chuyển hướng sang cổng VNPay
         window.location.href = paymentUrl;
+        return;
+      }
+
+      if (paymentMethod === 'SEPAY' && createdOrder) {
+        setCreatedOrderForQr({
+          id: createdOrder.id,
+          orderCode: createdOrder.orderCode,
+          amount: createdOrder.totalAmount,
+        });
+        setIsVietQrOpen(true);
         return;
       }
 
@@ -422,8 +439,29 @@ export const CheckoutPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* VietQR Payment Modal */}
+      {createdOrderForQr && (
+        <VietQrModal
+          isOpen={isVietQrOpen}
+          orderId={createdOrderForQr.id}
+          orderCode={createdOrderForQr.orderCode}
+          amount={createdOrderForQr.amount}
+          onClose={() => {
+            setIsVietQrOpen(false);
+            showToast('Đơn hàng đã được tạo. Bạn có thể thanh toán sau trong chi tiết đơn hàng.', 'warning');
+            navigate(`/orders/${createdOrderForQr.id}`);
+          }}
+          onPaymentSuccess={() => {
+            setIsVietQrOpen(false);
+            showToast('Thanh toán đơn hàng thành công!', 'success');
+            navigate(`/orders/${createdOrderForQr.id}`);
+          }}
+        />
+      )}
     </div>
   );
 };
 
 export default CheckoutPage;
+

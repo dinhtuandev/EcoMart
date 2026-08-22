@@ -14,12 +14,14 @@ import {
   Loader2,
   Star,
   X,
+  QrCode,
 } from 'lucide-react';
 import { orderApi } from '../services/orderApi';
 import { reviewApi } from '../services/reviewApi';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { Order, OrderStatus, OrderItem, CustomAxiosError } from '../types';
+import { VietQrModal } from '../components/payment/VietQrModal';
 
 const formatCurrency = (amount: number): string =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount || 0);
@@ -77,6 +79,8 @@ export const OrderDetailPage: React.FC = () => {
   const [cancelConfirm, setCancelConfirm] = useState<boolean>(false);
   const [isCancelling, setIsCancelling] = useState<boolean>(false);
   const [isReordering, setIsReordering] = useState<boolean>(false);
+  const [isRetryingPayment, setIsRetryingPayment] = useState<boolean>(false);
+  const [isVietQrOpen, setIsVietQrOpen] = useState<boolean>(false);
 
   // Review modal state
   const [reviewingItem, setReviewingItem] = useState<OrderItem | null>(null);
@@ -132,6 +136,24 @@ export const OrderDetailPage: React.FC = () => {
       showToast(customError.response?.data?.message || 'Không thể hủy đơn hàng.', 'error');
     } finally {
       setIsCancelling(false);
+    }
+  };
+
+  const handleRetryVNPay = async (): Promise<void> => {
+    if (!order) return;
+    setIsRetryingPayment(true);
+    try {
+      const res = await orderApi.retryPayment(order.id);
+      if (res.data?.paymentUrl) {
+        window.location.href = res.data.paymentUrl;
+      } else {
+        showToast('Không thể tạo liên kết thanh toán VNPay. Vui lòng thử lại.', 'error');
+      }
+    } catch (error: unknown) {
+      const customError = error as CustomAxiosError;
+      showToast(customError.response?.data?.message || 'Có lỗi xảy ra khi thử lại thanh toán.', 'error');
+    } finally {
+      setIsRetryingPayment(false);
     }
   };
 
@@ -193,7 +215,40 @@ export const OrderDetailPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Pay with VietQR button */}
+          {order.paymentStatus === 'UNPAID' && order.status !== 'CANCELLED' && order.paymentMethod === 'SEPAY' && (
+            <button
+              type="button"
+              onClick={() => setIsVietQrOpen(true)}
+              tabIndex={0}
+              aria-label="Mở mã VietQR để thanh toán"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition-all"
+            >
+              <QrCode className="w-3.5 h-3.5" />
+              <span>Quét mã VietQR thanh toán</span>
+            </button>
+          )}
+
+          {/* Pay with VNPay button */}
+          {order.paymentStatus === 'UNPAID' && order.status !== 'CANCELLED' && order.paymentMethod === 'VNPAY' && (
+            <button
+              type="button"
+              onClick={handleRetryVNPay}
+              disabled={isRetryingPayment}
+              tabIndex={0}
+              aria-label="Thanh toán lại qua cổng VNPay"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/20 transition-all disabled:opacity-50"
+            >
+              {isRetryingPayment ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <CreditCard className="w-3.5 h-3.5" />
+              )}
+              <span>Thanh toán qua VNPay</span>
+            </button>
+          )}
+
           {/* Re-order button */}
           {order.status === 'COMPLETED' && (
             <button
@@ -442,6 +497,40 @@ export const OrderDetailPage: React.FC = () => {
                   <span className="font-semibold">{formatDate(order.paidAt)}</span>
                 </div>
               )}
+
+              {/* Quick Pay CTA in Payment Card for UNPAID orders */}
+              {order.paymentStatus === 'UNPAID' && order.status !== 'CANCELLED' && (
+                <div className="pt-2 border-t border-gray-100">
+                  {order.paymentMethod === 'SEPAY' ? (
+                    <button
+                      type="button"
+                      onClick={() => setIsVietQrOpen(true)}
+                      tabIndex={0}
+                      aria-label="Mở mã QR thanh toán"
+                      className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <QrCode className="w-3.5 h-3.5" />
+                      <span>Quét mã VietQR ngay</span>
+                    </button>
+                  ) : order.paymentMethod === 'VNPAY' ? (
+                    <button
+                      type="button"
+                      onClick={handleRetryVNPay}
+                      disabled={isRetryingPayment}
+                      tabIndex={0}
+                      aria-label="Thanh toán qua cổng VNPay"
+                      className="w-full py-2 px-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    >
+                      {isRetryingPayment ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <CreditCard className="w-3.5 h-3.5" />
+                      )}
+                      <span>Thanh toán qua VNPay</span>
+                    </button>
+                  ) : null}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -453,6 +542,22 @@ export const OrderDetailPage: React.FC = () => {
           item={reviewingItem}
           onSuccess={() => handleReviewSubmitted(reviewingItem.id)}
           onClose={() => setReviewingItem(null)}
+        />
+      )}
+
+      {/* VietQR Payment Modal */}
+      {order && (
+        <VietQrModal
+          isOpen={isVietQrOpen}
+          orderId={order.id}
+          orderCode={order.orderCode}
+          amount={order.totalAmount}
+          onClose={() => setIsVietQrOpen(false)}
+          onPaymentSuccess={() => {
+            setIsVietQrOpen(false);
+            showToast('Thanh toán đơn hàng thành công!', 'success');
+            fetchOrder();
+          }}
         />
       )}
     </div>
