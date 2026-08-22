@@ -93,13 +93,13 @@
 ---
 
 ## 🛒 Module 7: Shopping Cart Management
-- [ ] **7.1. API Service & State**:
-  - [ ] `src/services/cartApi.js`: `getCart`, `addToCart`, `updateCartItem`, `removeCartItem`, `clearCart`.
-  - [ ] `src/context/CartContext.jsx`: Lưu trữ giỏ hàng, đồng bộ realtime khi thêm/sửa/xóa, tính tổng tiền, kiểm tra tồn kho.
-- [ ] **7.2. Giao diện**:
-  - [ ] Header: Icon giỏ hàng với badge số lượng cập nhật tức thì.
-  - [ ] `src/pages/CartPage.jsx`: Bảng sản phẩm trong giỏ, bộ tăng/giảm số lượng (Stepper) giới hạn theo tồn kho, checkbox chọn sản phẩm để thanh toán, xóa từng món hoặc xóa tất cả, bảng tóm tắt đơn hàng.
-- [ ] **Git Commit**: `feat(fe-cart): Implement Module 7 Shopping cart management with realtime stock sync`
+- [x] **7.1. API Service & State**:
+  - [x] `src/services/cartApi.ts`: `getCart`, `addToCart`, `updateCartItem`, `removeCartItem`, `clearCart`.
+  - [x] `src/context/CartContext.tsx`: Derived State với `useMemo` (`totalQuantity`, `totalAmount`), 500ms Debounce Sync, kiểm tra tồn kho realtime và Optimistic update.
+- [x] **7.2. Giao diện**:
+  - [x] `src/components/layout/Header.tsx`: Icon giỏ hàng với live badge số lượng (`totalQuantity > 99 ? '99+' : totalQuantity`).
+  - [x] `src/pages/CartPage.tsx`: Bảng sản phẩm trong giỏ, bộ tăng/giảm số lượng (Stepper) giới hạn theo tồn kho thực tế, checkbox chọn sản phẩm để thanh toán, xóa từng món hoặc xóa tất cả, bảng tóm tắt đơn hàng chuyển sang `/checkout`.
+- [x] **Git Commit**: `feat(fe-cart): Implement Module 7 Shopping cart management with realtime stock sync and derived useMemo calculations`
 
 ---
 
