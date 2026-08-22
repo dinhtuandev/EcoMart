@@ -14,6 +14,7 @@ import ProductDetailPage from '../pages/ProductDetailPage';
 import CartPage from '../pages/CartPage';
 import CheckoutPage from '../pages/CheckoutPage';
 import OrderHistoryPage from '../pages/OrderHistoryPage';
+import OrderDetailPage from '../pages/OrderDetailPage';
 import ProfilePage from '../pages/ProfilePage';
 import NotFoundPage from '../pages/NotFoundPage';
 
@@ -22,7 +23,8 @@ import AdminCategoryPage from '../pages/admin/AdminCategoryPage';
 import AdminBrandPage from '../pages/admin/AdminBrandPage';
 import AdminProductPage from '../pages/admin/AdminProductPage';
 import AdminCertificationPage from '../pages/admin/AdminCertificationPage';
-import AdminOrderPage from '../pages/AdminOrderPage';
+import AdminOrderPage from '../pages/admin/AdminOrderPage';
+import AdminOrderDetailPage from '../pages/admin/AdminOrderDetailPage';
 import AdminUserPage from '../pages/admin/AdminUserPage';
 
 export const AppRoutes: React.FC = () => {
@@ -42,6 +44,7 @@ export const AppRoutes: React.FC = () => {
         <Route element={<ProtectedRoute allowedRoles={['CUSTOMER', 'ADMIN']} />}>
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/orders" element={<OrderHistoryPage />} />
+          <Route path="/orders/:id" element={<OrderDetailPage />} />
           <Route path="/profile" element={<ProfilePage />} />
         </Route>
 
@@ -57,6 +60,7 @@ export const AppRoutes: React.FC = () => {
           <Route path="/admin/products" element={<AdminProductPage />} />
           <Route path="/admin/certifications" element={<AdminCertificationPage />} />
           <Route path="/admin/orders" element={<AdminOrderPage />} />
+          <Route path="/admin/orders/:id" element={<AdminOrderDetailPage />} />
           <Route path="/admin/users" element={<AdminUserPage />} />
         </Route>
       </Route>

@@ -88,6 +88,117 @@ export interface CartContextType {
   handleClearCart: () => Promise<void>;
 }
 
+// ==========================================
+// MODULE 8: ORDER MANAGEMENT TYPES
+// ==========================================
+
+/**
+ * Enum trạng thái đơn hàng
+ */
+export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
+
+/**
+ * Enum phương thức thanh toán
+ */
+export type PaymentMethod = 'COD' | 'VNPAY' | 'SEPAY';
+
+/**
+ * Enum trạng thái thanh toán
+ */
+export type PaymentStatus = 'UNPAID' | 'PAID' | 'FAILED' | 'REFUNDED';
+
+/**
+ * Sản phẩm trong đơn hàng (snapshot giá tại thời điểm đặt)
+ */
+export interface OrderItem {
+  id: number;
+  productId: number;
+  productName: string;
+  productImageUrl?: string;
+  unitPrice: number;
+  quantity: number;
+  lineTotal: number;
+}
+
+/**
+ * Giao dịch thanh toán liên kết với đơn hàng
+ */
+export interface PaymentTransaction {
+  id: number;
+  paymentRef: string;
+  gateway: string;
+  amount: number;
+  gatewayTransactionNo?: string;
+  status: string;
+  createdAt: string;
+}
+
+/**
+ * Thực thể Đơn hàng đầy đủ
+ */
+export interface Order {
+  id: number;
+  orderCode: string;
+  status: OrderStatus;
+  paymentMethod: PaymentMethod;
+  paymentStatus: PaymentStatus;
+  totalAmount: number;
+  recipientName: string;
+  recipientPhone: string;
+  deliveryAddress: string;
+  cancellationReason?: string;
+  orderedAt?: string;
+  confirmedAt?: string;
+  completedAt?: string;
+  cancelledAt?: string;
+  paidAt?: string;
+  items: OrderItem[];
+  paymentTransactions: PaymentTransaction[];
+}
+
+/**
+ * Payload tạo đơn hàng mới
+ */
+export interface CreateOrderPayload {
+  addressId: number;
+  paymentMethod: PaymentMethod;
+}
+
+/**
+ * Response khi tạo đơn hàng thành công
+ */
+export interface CreateOrderResponse {
+  order: Order;
+  paymentUrl?: string;
+}
+
+/**
+ * Params lọc đơn hàng Admin
+ */
+export interface AdminOrderFilterParams {
+  keyword?: string;
+  status?: OrderStatus;
+  paymentStatus?: PaymentStatus;
+  paymentMethod?: PaymentMethod;
+  fromDate?: string;
+  toDate?: string;
+  page: number;
+  pageSize: number;
+}
+
+/**
+ * Request hủy đơn hàng Admin (kèm lý do)
+ */
+export interface AdminCancelOrderPayload {
+  cancellationReason: string;
+}
+
+/**
+ * Request cập nhật trạng thái thanh toán Admin
+ */
+export interface UpdatePaymentStatusPayload {
+  paymentStatus: PaymentStatus;
+}
 
 
 /**
