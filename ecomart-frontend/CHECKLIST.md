@@ -8,52 +8,53 @@
 ---
 
 ## 🛠️ Giai Đoạn 0: Core Infrastructure & State Architecture
-- [ ] **0.1. Axios Client & Interceptor (`src/services/axiosClient.js`)**:
-  - [ ] Base URL cấu hình linh hoạt từ `VITE_API_URL` (mặc định `http://localhost:8081`).
-  - [ ] Request Interceptor: Tự động đính kèm header `Authorization: Bearer <accessToken>`.
-  - [ ] Response Interceptor: Bắt lỗi 401 tự động gọi `POST /api/v1/auth/refresh-token` với `refreshToken` để cấp lại `accessToken` mới mà không ngắt quãng phiên người dùng.
-  - [ ] Bắt lỗi 429: Hiển thị Toast cảnh báo Cooldown / Rate Limit kèm đếm ngược.
-  - [ ] Xử lý định dạng lỗi chuẩn RFC 7807 (`{ success: false, message: "..." }`).
-- [ ] **0.2. Toast Notification Context (`src/context/ToastContext.jsx`)**:
-  - [ ] Hệ thống Toast góc trên màn hình (Success, Error, Warning, Info) có animation và tự đóng sau 3.5s.
-- [ ] **0.3. Master Layouts & Routing (`src/routes/AppRoutes.jsx`)**:
-  - [ ] `MainLayout.jsx`: Header, Navigation Bar, Breadcrumb, Footer.
-  - [ ] `AdminLayout.jsx`: Sidebar điều hướng quản trị 12 modules, Topbar, Profile Menu.
-  - [ ] Route Guards: `PublicRoute`, `RequireCustomer`, `RequireAdmin`.
+- [x] **0.1. Axios Client & Interceptor (`src/lib/axiosClient.ts`)**:
+  - [x] Base URL cấu hình linh hoạt từ `VITE_API_URL` (mặc định `http://localhost:8081/api/v1`).
+  - [x] Request Interceptor: Tự động đính kèm header `Authorization: Bearer <accessToken>`.
+  - [x] Response Interceptor: Bắt lỗi 401 tự động gọi `POST /api/v1/auth/refresh-token` với hàng đợi `failedQueue` để cấp lại `accessToken` mới mà không ngắt quãng phiên người dùng.
+  - [x] Bắt lỗi 429: Hiển thị Toast cảnh báo Cooldown / Rate Limit kèm đếm ngược.
+  - [x] Xử lý định dạng lỗi chuẩn RFC 7807 (`{ success: false, message: "..." }`).
+- [x] **0.2. Toast Notification Context (`src/context/ToastContext.tsx` & `src/components/ui/ToastContainer.tsx`)**:
+  - [x] Hệ thống Toast góc trên màn hình (Success, Error, Warning, Info) có animation và tự đóng sau 3.0s.
+- [x] **0.3. Master Layouts & Routing (`src/routes/AppRoutes.jsx`)**:
+  - [x] `MainLayout.jsx`: Header, Navigation Bar, Breadcrumb, Footer.
+  - [x] `AdminLayout.jsx`: Sidebar điều hướng quản trị 12 modules, Topbar, Profile Menu.
+  - [x] Route Guards: `ProtectedRoute` với `isLoading` chống Flash UI.
 
 ---
 
 ## 🔐 Module 1: Auth & Security Core + Email OTP & Anti-Spam
-- [ ] **1.1. API Service & State**:
-  - [ ] `src/services/authApi.js`: `register`, `verifyEmail`, `resendOtp`, `login`, `refreshToken`, `forgotPassword`, `resetPasswordOtp`, `getMe`.
-  - [ ] `src/context/AuthContext.jsx`: Quản lý `currentUser`, `token`, `role`, `login()`, `logout()`, `verifyEmail()`.
-- [ ] **1.2. Màn hình & Components**:
-  - [ ] `src/pages/LoginPage.jsx`: Đăng nhập bằng Email/Password, validation, phân luồng điều hướng theo Role (`ADMIN` $\to$ `/admin/dashboard`, `CUSTOMER` $\to$ `/`).
-  - [ ] `src/pages/RegisterPage.jsx`: Form đăng ký Customer $\to$ Mở **Modal Nhập Mã OTP 6 Số** (Resend API) với đếm ngược 60 giây và cảnh báo tối đa 5 lần thử.
-  - [ ] `src/pages/VerifyEmailPage.jsx`: Xác thực email bằng OTP và tự động đăng nhập khi thành công.
-  - [ ] `src/pages/ForgotPasswordPage.jsx`: Luồng 2 bước: Nhập email nhận OTP $\to$ Nhập OTP và mật khẩu mới.
-- [ ] **Git Commit**: `feat(fe-auth): Implement Module 1 Auth, Resend Email OTP verification, anti-spam and refresh token`
+- [x] **1.1. API Service & State**:
+  - [x] `src/services/authApi.ts`: `register`, `verifyEmail`, `resendOtp`, `login`, `refreshToken`, `forgotPassword`, `resetPasswordOtp`, `getMe`.
+  - [x] `src/providers/AuthProvider.tsx`: Quản lý `currentUser`, `accessToken`, `refreshToken`, `role`, `useReducer` chuẩn SaaS.
+- [x] **1.2. Màn hình & Components**:
+  - [x] `src/pages/LoginPage.tsx`: Đăng nhập bằng Email/Password, validation, phân luồng điều hướng theo Role (`ADMIN` $\to$ `/admin`, `CUSTOMER` $\to$ `/`).
+  - [x] `src/pages/RegisterPage.tsx`: Form đăng ký Customer $\to$ Mở **Modal Nhập Mã OTP 6 Số** (Resend API) với đếm ngược 60 giây và cảnh báo tối đa 5 lần thử.
+  - [x] `src/components/auth/OtpInput.tsx` & `src/components/auth/OtpVerificationModal.tsx`: 6 ô số, regex parse 429 cooldown.
+  - [x] `src/pages/ForgotPasswordPage.tsx`: Luồng 2 bước: Nhập email nhận OTP $\to$ Nhập OTP và mật khẩu mới.
+- [x] **Git Commit**: `feat(fe-auth): Implement Module 1 Auth, Resend Email OTP verification, anti-spam and refresh token`
 
 ---
 
 ## 👤 Module 2: User Profile Management
-- [ ] **2.1. API Service**:
-  - [ ] `src/services/userApi.js`: `getProfile`, `updateProfile`, `changePassword`, `adminGetUsers`, `adminToggleUserStatus`.
-- [ ] **2.2. Màn hình Khách Hàng & Quản Trị**:
-  - [ ] `src/pages/ProfilePage.jsx`: Xem & cập nhật thông tin cá nhân (Họ tên, SĐT, Email hiển thị readonly kèm badge "Đã xác thực"), Form đổi mật khẩu bảo mật.
-  - [ ] `src/pages/admin/AdminUserPage.jsx`: Bảng danh sách khách hàng, tìm kiếm theo tên/email, toggle trạng thái hoạt động (`isActive`).
-- [ ] **Git Commit**: `feat(fe-user): Implement Module 2 User profile, change password and admin user management`
+- [x] **2.1. API Service**:
+  - [x] `src/services/userApi.ts`: `getProfile`, `updateProfile`, `changePassword`, `adminGetUsers`, `adminUpdateUserStatus`.
+- [x] **2.2. Màn hình Khách Hàng & Quản Trị**:
+  - [x] `src/pages/ProfilePage.tsx`: Xem & cập nhật thông tin cá nhân (Họ tên, SĐT, Email hiển thị readonly kèm badge "Đã xác thực"), Form đổi mật khẩu bảo mật.
+  - [x] `src/pages/admin/AdminUserPage.tsx`: Bảng danh sách khách hàng, tìm kiếm theo tên/email debounce 500ms, toggle trạng thái hoạt động (`isActive`) với Optimistic Update.
+- [x] **Git Commit**: `feat(fe-user): Implement Module 2 User profile, change password and admin user management`
 
 ---
 
 ## 📍 Module 3: Address Book Management
-- [ ] **3.1. API Service**:
-  - [ ] `src/services/addressApi.js`: `getAddresses`, `createAddress`, `updateAddress`, `deleteAddress`, `setDefaultAddress`.
-- [ ] **3.2. Màn hình & Components**:
-  - [ ] `src/components/address/AddressModal.jsx`: Modal thêm/sửa địa chỉ (Tên người nhận, SĐT, Tỉnh/TP, Quận/Huyện, Phường/Xã, Chi tiết, Checkbox đặt làm mặc định).
-  - [ ] `src/pages/AddressPage.jsx` (hoặc tab trong Profile): Danh sách thẻ địa chỉ giao hàng, nút Sửa, Xóa, Đặt mặc định.
-  - [ ] Tích hợp Address Selector vào trang Checkout.
-- [ ] **Git Commit**: `feat(fe-address): Implement Module 3 Address book management and checkout address selector`
+- [x] **3.1. API Service**:
+  - [x] `src/services/addressApi.ts`: `getAddresses`, `createAddress`, `updateAddress`, `deleteAddress`.
+  - [x] `src/services/locationApi.ts`: Tích hợp Vietnam Provinces API chuẩn phân cấp `depth=2` cho 63 Tỉnh/Thành $\to$ Quận/Huyện $\to$ Phường/Xã.
+- [x] **3.2. Màn hình & Components**:
+  - [x] `src/components/address/AddressModal.tsx`: Modal thêm/sửa địa chỉ với 3 Dropdown phân cấp (Tỉnh $\to$ Quận $\to$ Phường), validate SĐT VN, Checkbox đặt làm mặc định.
+  - [x] `src/components/address/AddressCard.tsx`: Thẻ hiển thị địa chỉ có badge "Mặc định", nút Sửa & Xóa có xác nhận an toàn.
+  - [x] `src/pages/ProfilePage.tsx` (Tab Sổ Địa Chỉ): Danh sách địa chỉ nhận hàng với Optimistic Update cho cờ `isDefault`.
+- [x] **Git Commit**: `feat(fe-address): Implement Module 3 Address book management with Vietnam Provinces API`
 
 ---
 
