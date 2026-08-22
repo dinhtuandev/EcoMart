@@ -4,6 +4,7 @@ import {
   PageResponse,
   InventoryItem,
   UpdateInventoryPayload,
+  AdminInventoryFilterParams,
 } from '../types';
 
 /**
@@ -13,13 +14,20 @@ export const inventoryApi = {
   /**
    * Lấy danh sách tồn kho sản phẩm (có lọc sắp hết hàng)
    */
-  getInventory: (params?: {
-    page?: number;
-    pageSize?: number;
-    keyword?: string;
-    lowStockOnly?: boolean;
-  }): Promise<ApiResponse<PageResponse<InventoryItem>>> =>
-    axiosClient.get('/admin/inventory', { params }),
+  getAdminInventory: (
+    params?: AdminInventoryFilterParams,
+    signal?: AbortSignal
+  ): Promise<ApiResponse<PageResponse<InventoryItem>>> =>
+    axiosClient.get('/admin/inventory', { params, signal }),
+
+  /**
+   * Alias tương thích getInventory
+   */
+  getInventory: (
+    params?: AdminInventoryFilterParams,
+    signal?: AbortSignal
+  ): Promise<ApiResponse<PageResponse<InventoryItem>>> =>
+    axiosClient.get('/admin/inventory', { params, signal }),
 
   /**
    * Cập nhật số lượng tồn kho sản phẩm

@@ -364,6 +364,34 @@ export const ProductDetailPage: React.FC = () => {
 
       {/* Product Reviews Section */}
       <ProductReviewSection productId={product.id} />
+
+      {/* Sticky Mobile Add-to-Cart Bar (lg:hidden) */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-2xl p-3 flex items-center justify-between gap-3 lg:hidden">
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] text-slate-400 font-bold uppercase truncate">
+            {product.name}
+          </p>
+          <p className="text-sm font-black text-emerald-600">
+            {formatCurrency(product.sellingPrice)}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={onAddToCart}
+          disabled={product.quantityInStock <= 0 || isAddingToCart}
+          tabIndex={0}
+          aria-label="Thêm vào giỏ hàng"
+          className="flex-1 max-w-[200px] py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/20 flex items-center justify-center gap-1.5 transition-all disabled:opacity-50"
+        >
+          {isAddingToCart ? (
+            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <ShoppingBag className="w-3.5 h-3.5" />
+          )}
+          <span>Thêm Vào Giỏ</span>
+        </button>
+      </div>
     </div>
   );
 };
@@ -597,4 +625,6 @@ const ProductReviewSection: React.FC<ProductReviewSectionProps> = ({ productId }
 };
 
 export default ProductDetailPage;
+
+
 

@@ -1148,3 +1148,39 @@ export interface AdminContactFilterParams {
   fromDate?: string;
   toDate?: string;
 }
+
+// ==========================================
+// MODULE 12: INVENTORY & PAYMENT RETURN TYPES
+// ==========================================
+
+/**
+ * Mục tồn kho sản phẩm trong kho Admin
+ */
+export interface InventoryItem {
+  id: number;
+  productId: number;
+  productName: string;
+  productImageUrl?: string;
+  categoryName?: string;
+  sellingPrice?: number;
+  quantityInStock: number;
+  updatedAt?: string;
+}
+
+/**
+ * Payload cập nhật số lượng tồn kho
+ */
+export interface UpdateInventoryPayload {
+  quantityInStock: number;
+}
+
+/**
+ * Tham số lọc danh sách tồn kho
+ */
+export interface AdminInventoryFilterParams {
+  page?: number;
+  pageSize?: number;
+  keyword?: string;
+  lowStockOnly?: boolean;
+}
+

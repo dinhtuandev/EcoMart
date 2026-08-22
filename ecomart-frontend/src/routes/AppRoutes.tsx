@@ -24,6 +24,7 @@ import AdminDashboardPage from '../pages/AdminDashboardPage';
 import AdminCategoryPage from '../pages/admin/AdminCategoryPage';
 import AdminBrandPage from '../pages/admin/AdminBrandPage';
 import AdminProductPage from '../pages/admin/AdminProductPage';
+import AdminInventoryPage from '../pages/admin/AdminInventoryPage';
 import AdminCertificationPage from '../pages/admin/AdminCertificationPage';
 import AdminOrderPage from '../pages/admin/AdminOrderPage';
 import AdminOrderDetailPage from '../pages/admin/AdminOrderDetailPage';
@@ -67,6 +68,7 @@ export const AppRoutes: React.FC = () => {
           <Route path="/admin/categories" element={<AdminCategoryPage />} />
           <Route path="/admin/brands" element={<AdminBrandPage />} />
           <Route path="/admin/products" element={<AdminProductPage />} />
+          <Route path="/admin/inventory" element={<AdminInventoryPage />} />
           <Route path="/admin/certifications" element={<AdminCertificationPage />} />
           <Route path="/admin/orders" element={<AdminOrderPage />} />
           <Route path="/admin/orders/:id" element={<AdminOrderDetailPage />} />

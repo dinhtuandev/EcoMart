@@ -12,6 +12,7 @@ import {
   Star,
   FileText,
   Settings,
+  Warehouse,
 } from 'lucide-react';
 
 export const AdminSidebar: React.FC = () => {
@@ -20,6 +21,7 @@ export const AdminSidebar: React.FC = () => {
     { path: '/admin/categories', label: 'Quản lý Danh mục', icon: FolderTree },
     { path: '/admin/brands', label: 'Quản lý Thương hiệu', icon: Award },
     { path: '/admin/products', label: 'Quản lý Sản phẩm', icon: Package },
+    { path: '/admin/inventory', label: 'Quản lý Tồn kho', icon: Warehouse },
     { path: '/admin/certifications', label: 'Chứng nhận xanh', icon: ShieldCheck },
     { path: '/admin/orders', label: 'Quản lý Đơn hàng', icon: Receipt },
     { path: '/admin/reviews', label: 'Quản lý Đánh giá', icon: Star },
