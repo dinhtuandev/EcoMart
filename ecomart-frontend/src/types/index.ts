@@ -29,7 +29,16 @@ export type CustomAxiosError = AxiosError<ApiErrorResponse>;
 /**
  * Cấu trúc Phân trang dữ liệu từ Spring Boot PageResponse
  */
+export interface PaginationMeta {
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+}
+
 export interface PageResponse<T> {
+  items?: T[];
+  pagination?: PaginationMeta;
   content: T[];
   pageNumber: number;
   pageSize: number;
@@ -37,6 +46,39 @@ export interface PageResponse<T> {
   totalPages: number;
   last: boolean;
 }
+
+/**
+ * Thực thể Giỏ hàng & Sản phẩm trong giỏ
+ */
+export interface CartItem {
+  id: number;
+  productId: number;
+  productName: string;
+  productImage?: string;
+  price: number;
+  quantity: number;
+  totalPrice: number;
+  product?: Product;
+}
+
+export interface Cart {
+  id: number;
+  items: CartItem[];
+  totalAmount: number;
+}
+
+export interface CartContextType {
+  cart: Cart | null;
+  cartItems: CartItem[];
+  totalItems: number;
+  totalPrice: number;
+  loading: boolean;
+  fetchCart: () => Promise<void>;
+  handleAddToCart: (productId: number, quantity?: number) => Promise<boolean>;
+  handleRemoveFromCart: (cartItemId: number) => Promise<void>;
+  handleUpdateQuantity: (cartItemId: number, quantity: number) => Promise<void>;
+}
+
 
 /**
  * Thực thể Người dùng
@@ -307,4 +349,122 @@ export interface BrandPayload {
   description?: string;
   isActive?: boolean;
 }
+
+// ==========================================
+// MODULE 6: PRODUCT & CERTIFICATION TYPES
+// ==========================================
+
+/**
+ * Thực thể Hình ảnh sản phẩm
+ */
+export interface ProductImage {
+  id: number;
+  imageUrl: string;
+  isPrimary: boolean;
+  displayOrder: number;
+  createdAt?: string;
+}
+
+/**
+ * Payload Thêm / Sửa hình ảnh sản phẩm
+ */
+export interface ProductImagePayload {
+  url: string;
+  isPrimary?: boolean;
+  displayOrder?: number;
+}
+
+/**
+ * Thực thể Chứng nhận sinh thái (Eco Certification)
+ */
+export interface Certification {
+  id: number;
+  name: string;
+  description?: string;
+  iconUrl?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Payload Thêm / Sửa Chứng nhận sinh thái
+ */
+export interface CertificationPayload {
+  name: string;
+  description?: string;
+  iconUrl?: string;
+  isActive?: boolean;
+}
+
+/**
+ * Thực thể Sản phẩm (Product)
+ */
+export interface Product {
+  id: number;
+  name: string;
+  description?: string;
+  sellingPrice: number;
+  originalPrice?: number;
+  ecoScore: number; // 1 to 5
+  materialInfo?: string;
+  isVisible: boolean;
+  category: Category;
+  brand: Brand;
+  certifications?: Certification[];
+  images?: ProductImage[];
+  quantityInStock: number;
+  createdAt: string;
+  updatedAt: string;
+  // Fallbacks
+  averageRating?: number;
+  reviewCount?: number;
+}
+
+/**
+ * Payload Thêm / Sửa Sản phẩm
+ */
+export interface ProductPayload {
+  name: string;
+  categoryId: number;
+  brandId: number;
+  sellingPrice: number;
+  originalPrice?: number;
+  ecoScore?: number;
+  materialInfo?: string;
+  certificationIds?: number[];
+  description?: string;
+  isVisible?: boolean;
+  quantityInStock?: number;
+  images?: ProductImagePayload[];
+}
+
+/**
+ * Tham số lọc sản phẩm cho Khách hàng (Public Catalog)
+ */
+export interface ProductFilterParams {
+  page?: number;
+  pageSize?: number;
+  keyword?: string;
+  categoryId?: number;
+  brandId?: number;
+  certificationId?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  minEcoScore?: number;
+  sort?: string;
+}
+
+/**
+ * Tham số lọc sản phẩm cho Admin
+ */
+export interface AdminProductFilterParams {
+  page?: number;
+  pageSize?: number;
+  keyword?: string;
+  categoryId?: number;
+  brandId?: number;
+  isVisible?: boolean;
+}
+
 

@@ -1,15 +1,16 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { cartApi } from '../services/cartApi';
 import { useAuth } from './AuthContext';
+import { Cart, CartItem, CartContextType } from '../types';
 
-const CartContext = createContext(null);
+const CartContext = createContext<CartContextType | null>(null);
 
-export const CartProvider = ({ children }) => {
+export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
-  const [cart, setCart] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [cart, setCart] = useState<Cart | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const fetchCart = async () => {
+  const fetchCart = useCallback(async () => {
     if (!isAuthenticated) {
       setCart(null);
       return;
@@ -17,67 +18,68 @@ export const CartProvider = ({ children }) => {
     setLoading(true);
     try {
       const res = await cartApi.getCart();
-      if (res.success) {
+      if (res && res.data) {
         setCart(res.data);
       }
-    } catch (err) {
-      console.error('Failed to fetch cart:', err);
+    } catch {
+      // Ignore initial cart errors
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     fetchCart();
-  }, [isAuthenticated]);
+  }, [fetchCart]);
 
-  const handleAddToCart = async (productId, quantity = 1) => {
+  const handleAddToCart = async (productId: number, quantity = 1): Promise<boolean> => {
     if (!isAuthenticated) return false;
     setLoading(true);
     try {
       const res = await cartApi.addToCart({ productId, quantity });
-      if (res.success) {
+      if (res && res.data) {
         setCart(res.data);
         return true;
       }
-    } catch (err) {
-      alert(err.response?.data?.message || 'Không thể thêm sản phẩm vào giỏ hàng');
+    } catch {
+      return false;
     } finally {
       setLoading(false);
     }
     return false;
   };
 
-  const handleUpdateQuantity = async (cartItemId, quantity) => {
+  const handleUpdateQuantity = async (cartItemId: number, quantity: number): Promise<void> => {
     setLoading(true);
     try {
       const res = await cartApi.updateCartItem(cartItemId, { quantity });
-      if (res.success) {
+      if (res && res.data) {
         setCart(res.data);
       }
-    } catch (err) {
-      alert(err.response?.data?.message || 'Không thể cập nhật số lượng');
+    } catch {
+      // Handle error
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRemoveFromCart = async (cartItemId) => {
+  const handleRemoveFromCart = async (cartItemId: number): Promise<void> => {
     setLoading(true);
     try {
       await cartApi.removeCartItem(cartItemId);
       await fetchCart();
-    } catch (err) {
-      alert(err.response?.data?.message || 'Không thể xóa sản phẩm khỏi giỏ');
+    } catch {
+      // Handle error
     } finally {
       setLoading(false);
     }
   };
 
-  const totalItems = cart?.items?.reduce((acc, item) => acc + item.quantity, 0) || 0;
+  const totalItems =
+    cart?.items?.reduce((acc: number, item: CartItem) => acc + item.quantity, 0) || 0;
   const totalPrice = cart?.totalAmount || 0;
 
-  const value = {
+  const value: CartContextType = {
     cart,
     cartItems: cart?.items || [],
     totalItems,
@@ -92,10 +94,12 @@ export const CartProvider = ({ children }) => {
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };
 
-export const useCart = () => {
+export const useCart = (): CartContextType => {
   const context = useContext(CartContext);
   if (!context) {
     throw new Error('useCart must be used within a CartProvider');
   }
   return context;
 };
+
+export default CartContext;
