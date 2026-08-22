@@ -27,6 +27,18 @@ export interface ApiErrorResponse {
 export type CustomAxiosError = AxiosError<ApiErrorResponse>;
 
 /**
+ * Cấu trúc Phân trang dữ liệu từ Spring Boot PageResponse
+ */
+export interface PageResponse<T> {
+  content: T[];
+  pageNumber: number;
+  pageSize: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+}
+
+/**
  * Thực thể Người dùng
  */
 export interface User {
@@ -165,4 +177,73 @@ export interface ToastItem {
  */
 export interface ToastContextType {
   showToast: (message: string, type?: ToastType) => void;
+}
+
+// ==========================================
+// MODULE 2: USER PROFILE & ADMIN USERS TYPES
+// ==========================================
+
+/**
+ * Payload Cập nhật thông tin cá nhân
+ */
+export interface UpdateProfilePayload {
+  fullName: string;
+  phoneNumber?: string;
+}
+
+/**
+ * Payload Đổi mật khẩu
+ */
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+/**
+ * Payload Khóa / Mở khóa tài khoản người dùng
+ */
+export interface UpdateUserStatusPayload {
+  isActive: boolean;
+}
+
+/**
+ * Tham số lọc danh sách người dùng cho Admin
+ */
+export interface AdminUsersFilterParams {
+  keyword?: string;
+  isActive?: boolean;
+  page?: number;
+  pageSize?: number;
+}
+
+// ==========================================
+// MODULE 3: ADDRESS MANAGEMENT TYPES
+// ==========================================
+
+/**
+ * Thực thể Địa chỉ nhận hàng
+ */
+export interface Address {
+  id: number;
+  receiverName: string;
+  receiverPhone: string;
+  province: string;
+  district: string;
+  ward: string;
+  detailAddress: string;
+  isDefault: boolean;
+}
+
+/**
+ * Payload Thêm / Sửa địa chỉ nhận hàng
+ */
+export interface AddressPayload {
+  receiverName: string;
+  receiverPhone: string;
+  province: string;
+  district: string;
+  ward: string;
+  detailAddress: string;
+  isDefault?: boolean;
 }

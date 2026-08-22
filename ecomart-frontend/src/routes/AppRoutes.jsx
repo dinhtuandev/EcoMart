@@ -20,6 +20,7 @@ import NotFoundPage from '../pages/NotFoundPage';
 import AdminDashboardPage from '../pages/AdminDashboardPage';
 import AdminProductPage from '../pages/AdminProductPage';
 import AdminOrderPage from '../pages/AdminOrderPage';
+import AdminUserPage from '../pages/admin/AdminUserPage';
 
 const AppRoutes = () => {
   return (
@@ -50,6 +51,7 @@ const AppRoutes = () => {
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/products" element={<AdminProductPage />} />
           <Route path="/admin/orders" element={<AdminOrderPage />} />
+          <Route path="/admin/users" element={<AdminUserPage />} />
         </Route>
       </Route>
     </Routes>
