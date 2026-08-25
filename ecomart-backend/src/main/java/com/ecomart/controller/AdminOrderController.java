@@ -76,4 +76,10 @@ public class AdminOrderController {
         OrderResponse response = orderService.updatePaymentStatus(orderId, request);
         return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái hoàn tiền thành công.", response));
     }
+
+    @PostMapping("/{orderId}/approve-payment")
+    public ResponseEntity<ApiResponse<OrderResponse>> approvePayment(@PathVariable Long orderId) {
+        OrderResponse response = orderService.approvePayment(orderId);
+        return ResponseEntity.ok(ApiResponse.success("Xác nhận thanh toán đơn hàng thành công.", response));
+    }
 }

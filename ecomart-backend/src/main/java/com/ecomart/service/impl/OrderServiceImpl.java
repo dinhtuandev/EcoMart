@@ -389,6 +389,38 @@ public class OrderServiceImpl implements OrderService {
         return mapToOrderResponse(savedOrder);
     }
 
+    @Override
+    @Transactional
+    public OrderResponse approvePayment(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Đơn hàng không tồn tại với ID: " + orderId));
+
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            throw new ConflictException("Không thể xác nhận thanh toán cho đơn hàng đã bị Hủy");
+        }
+
+        order.setPaymentStatus(PaymentStatus.PAID);
+        order.setPaidAt(LocalDateTime.now());
+        if (order.getStatus() == OrderStatus.PENDING) {
+            order.setStatus(OrderStatus.CONFIRMED);
+        }
+
+        Order savedOrder = orderRepository.save(order);
+
+        // Update pending payment transaction if any
+        paymentTransactionRepository.findFirstByOrderIdOrderByCreatedAtDesc(order.getId())
+                .ifPresent(tx -> {
+                    if (tx.getStatus() == PaymentTransactionStatus.PENDING) {
+                        tx.setStatus(PaymentTransactionStatus.SUCCESS);
+                        tx.setGatewayTransactionNo("ADMIN-APPROVED-" + System.currentTimeMillis());
+                        tx.setRawResponse("{\"adminApproved\":true,\"timestamp\":\"" + LocalDateTime.now() + "\"}");
+                        paymentTransactionRepository.save(tx);
+                    }
+                });
+
+        return mapToOrderResponse(savedOrder);
+    }
+
     private void restoreInventoryStock(Order order) {
         if (order.getItems() != null) {
             for (OrderItem item : order.getItems()) {

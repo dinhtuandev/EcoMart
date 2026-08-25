@@ -46,4 +46,6 @@ public interface OrderService {
     OrderResponse completeOrder(Long orderId);
 
     OrderResponse updatePaymentStatus(Long orderId, UpdatePaymentStatusRequest request);
+
+    OrderResponse approvePayment(Long orderId);
 }
