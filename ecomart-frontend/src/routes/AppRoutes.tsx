@@ -33,6 +33,7 @@ import AdminUserPage from '../pages/admin/AdminUserPage';
 import AdminContentPage from '../pages/admin/AdminContentPage';
 import AdminSettingsPage from '../pages/admin/AdminSettingsPage';
 import VNPayReturnPage from '../pages/VNPayReturnPage';
+import VNPayMockPage from '../pages/VNPayMockPage';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -49,6 +50,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/pages/:slug" element={<ContentPage />} />
         <Route path="/payment/vnpay/return" element={<VNPayReturnPage />} />
+        <Route path="/payment/vnpay/mock" element={<VNPayMockPage />} />
 
         {/* Customer Protected Routes */}
         <Route element={<ProtectedRoute allowedRoles={['CUSTOMER', 'ADMIN']} />}>

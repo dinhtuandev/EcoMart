@@ -20,7 +20,7 @@ const formatCurrency = (amount: number): string =>
 
 // Helper chuyển đổi định dạng ngày VNPay (YYYYMMDDHHmmss -> DD/MM/YYYY HH:mm:ss)
 const parseVNPayDate = (dateStr?: string): string => {
-  if (!dateStr || dateStr.length < 14) {
+  if (!dateStr) {
     return new Intl.DateTimeFormat('vi-VN', {
       day: '2-digit',
       month: '2-digit',
@@ -30,13 +30,29 @@ const parseVNPayDate = (dateStr?: string): string => {
       second: '2-digit',
     }).format(new Date());
   }
-  const year = dateStr.substring(0, 4);
-  const month = dateStr.substring(4, 6);
-  const day = dateStr.substring(6, 8);
-  const hour = dateStr.substring(8, 10);
-  const minute = dateStr.substring(10, 12);
-  const second = dateStr.substring(12, 14);
-  return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
+  if (dateStr.includes('-') || dateStr.includes('T')) {
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      return new Intl.DateTimeFormat('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      }).format(d);
+    }
+  }
+  if (dateStr.length >= 14) {
+    const year = dateStr.substring(0, 4);
+    const month = dateStr.substring(4, 6);
+    const day = dateStr.substring(6, 8);
+    const hour = dateStr.substring(8, 10);
+    const minute = dateStr.substring(10, 12);
+    const second = dateStr.substring(12, 14);
+    return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
+  }
+  return dateStr;
 };
 
 export const VNPayReturnPage: React.FC = () => {
@@ -77,6 +93,25 @@ export const VNPayReturnPage: React.FC = () => {
         return;
       }
 
+      if (!paramsObj.vnp_SecureHash) {
+        // Mock Sandbox flow
+        setResult({
+          isSuccess: vnpResponseCode === '00',
+          orderCode: vnpTxnRef,
+          transactionNo: searchParams.get('vnp_TransactionNo') || 'VNP-MOCK',
+          bankCode: vnpBankCode,
+          amount: vnpAmount,
+          payDate: vnpPayDate,
+          responseCode: vnpResponseCode || '00',
+          message:
+            vnpResponseCode === '00'
+              ? 'Giao dịch thanh toán thành công (Chế độ Thử nghiệm Sandbox).'
+              : 'Giao dịch thanh toán không thành công.',
+        });
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const res = await paymentApi.getVNPayReturn(paramsObj);
         if (res.success && res.data) {
@@ -95,7 +130,7 @@ export const VNPayReturnPage: React.FC = () => {
     };
 
     verifyPayment();
-  }, [searchParams]);
+  }, [searchParams, vnpResponseCode, vnpTxnRef, vnpBankCode, vnpAmount, vnpPayDate]);
 
   if (isLoading) {
     return (

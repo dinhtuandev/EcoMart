@@ -138,13 +138,16 @@ export const CheckoutPage: React.FC = () => {
       });
 
       const createdOrder = res.data?.order;
-      const paymentUrl = res.data?.paymentUrl;
 
       await fetchCart(); // Làm mới giỏ hàng sau khi đặt
 
-      if (paymentMethod === 'VNPAY' && paymentUrl) {
-        // Chuyển hướng sang cổng VNPay
-        window.location.href = paymentUrl;
+      if (paymentMethod === 'VNPAY' && createdOrder) {
+        // Chuyển hướng sang cổng Giả lập VNPay Sandbox
+        navigate(
+          `/payment/vnpay/mock?orderId=${createdOrder.id}&orderCode=${encodeURIComponent(
+            createdOrder.orderCode
+          )}&amount=${createdOrder.totalAmount}`
+        );
         return;
       }
 

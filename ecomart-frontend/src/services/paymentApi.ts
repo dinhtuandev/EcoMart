@@ -12,6 +12,16 @@ export const paymentApi = {
     params: Record<string, string>
   ): Promise<ApiResponse<VNPayReturnResponse>> =>
     axiosClient.get('/payments/vnpay/return', { params }),
+
+  /**
+   * Giả lập thanh toán thành công (VNPay / SePay / Mock)
+   */
+  mockPaymentSuccess: (payload: {
+    orderId?: number;
+    orderCode?: string;
+    gateway?: 'VNPAY' | 'SEPAY' | 'COD';
+  }): Promise<ApiResponse<void>> =>
+    axiosClient.post('/payments/mock/success', payload),
 };
 
 export default paymentApi;

@@ -11,6 +11,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { orderApi } from '../../services/orderApi';
+import { paymentApi } from '../../services/paymentApi';
 import { useToast } from '../../context/ToastContext';
 
 export interface VietQrModalProps {
@@ -37,6 +38,7 @@ export const VietQrModal: React.FC<VietQrModalProps> = ({
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [isChecking, setIsChecking] = useState<boolean>(false);
+  const [isMockingSuccess, setIsMockingSuccess] = useState<boolean>(false);
 
   // Polling ref to prevent memory leak
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
@@ -93,6 +95,31 @@ export const VietQrModal: React.FC<VietQrModalProps> = ({
     }
     return false;
   }, [orderId, onPaymentSuccess]);
+
+  // Giả lập thanh toán chuyển khoản SePay thành công (Dành cho Demo / Thử nghiệm)
+  const handleMockPaymentSuccess = async (): Promise<void> => {
+    setIsMockingSuccess(true);
+    try {
+      await paymentApi.mockPaymentSuccess({
+        orderId,
+        orderCode,
+        gateway: 'SEPAY',
+      });
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+      setIsSuccess(true);
+      showToast('Xác nhận thanh toán SePay thành công!', 'success');
+      setTimeout(() => {
+        onPaymentSuccess();
+      }, 1200);
+    } catch {
+      showToast('Lỗi giả lập thanh toán chuyển khoản.', 'error');
+    } finally {
+      setIsMockingSuccess(false);
+    }
+  };
 
   // Countdown timer effect
   useEffect(() => {
@@ -347,38 +374,62 @@ export const VietQrModal: React.FC<VietQrModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-slate-50/50">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-6 py-4 border-t border-gray-100 bg-slate-50/50">
           <button
             type="button"
             onClick={onClose}
             tabIndex={0}
             aria-label="Đóng cửa sổ thanh toán"
-            className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+            className="w-full sm:w-auto px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
           >
             Đóng
           </button>
 
           {!isSuccess && timeLeft > 0 && (
-            <button
-              type="button"
-              onClick={checkPaymentStatus}
-              disabled={isChecking}
-              tabIndex={0}
-              aria-label="Kiểm tra trạng thái thanh toán"
-              className="inline-flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition-all disabled:opacity-50"
-            >
-              {isChecking ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Đang kiểm tra...</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Tôi Đã Chuyển Khoản</span>
-                </>
-              )}
-            </button>
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+              {/* Nút Giả lập thanh toán nhanh cho Demo */}
+              <button
+                type="button"
+                onClick={handleMockPaymentSuccess}
+                disabled={isMockingSuccess || isChecking}
+                tabIndex={0}
+                aria-label="Giả lập nhận tiền chuyển khoản thành công"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 active:scale-[0.98] text-white text-xs font-black rounded-xl shadow-md shadow-emerald-600/20 transition-all disabled:opacity-50"
+              >
+                {isMockingSuccess ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Đang xác nhận...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-200" />
+                    <span>⚡ Giả Lập Nhận Tiền (Demo Mock)</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={checkPaymentStatus}
+                disabled={isChecking || isMockingSuccess}
+                tabIndex={0}
+                aria-label="Kiểm tra trạng thái thanh toán"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-900 active:bg-black text-white text-xs font-bold rounded-xl shadow-md transition-all disabled:opacity-50"
+              >
+                {isChecking ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Đang kiểm tra...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Tôi Đã Chuyển Khoản</span>
+                  </>
+                )}
+              </button>
+            </div>
           )}
         </div>
       </div>
