@@ -52,6 +52,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/brands/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/certifications/**").permitAll()
 
                         // Contact, Content Pages & Store Settings Public Endpoints
                         .requestMatchers(HttpMethod.POST, "/api/v1/contact-messages").permitAll()
