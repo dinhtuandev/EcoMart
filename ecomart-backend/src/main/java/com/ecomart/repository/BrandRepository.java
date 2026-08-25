@@ -13,6 +13,8 @@ public interface BrandRepository extends JpaRepository<Brand, Long> {
 
     List<Brand> findAllByOrderByNameAsc();
 
+    java.util.Optional<Brand> findByName(String name);
+
     boolean existsByName(String name);
 
     boolean existsByNameAndIdNot(String name, Long id);

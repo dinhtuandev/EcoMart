@@ -13,6 +13,8 @@ public interface CertificationRepository extends JpaRepository<Certification, Lo
 
     List<Certification> findAllByOrderByNameAsc();
 
+    java.util.Optional<Certification> findByName(String name);
+
     boolean existsByName(String name);
 
     boolean existsByNameAndIdNot(String name, Long id);
