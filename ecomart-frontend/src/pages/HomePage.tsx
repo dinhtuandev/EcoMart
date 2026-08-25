@@ -30,7 +30,9 @@ export const HomePage: React.FC = () => {
           categoryApi.getCategories(controller.signal),
         ]);
         if (isMounted) {
-          const items = prodRes.data?.items || prodRes.data?.content || [];
+          const items: Product[] = Array.isArray(prodRes.data)
+            ? (prodRes.data as Product[])
+            : prodRes.data?.items || prodRes.data?.content || [];
           setProducts(items);
           setCategories(catRes.data || []);
         }

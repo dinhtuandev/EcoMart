@@ -70,8 +70,25 @@ export const ProductListPage: React.FC = () => {
       try {
         const response = await productApi.getProducts(filters, controller.signal);
         if (isMounted) {
-          setProducts(response.data?.items || []);
-          setPagination(response.data || null);
+          const resAny = response as unknown as {
+            data?: unknown;
+            pagination?: { totalPages?: number; totalItems?: number; page?: number; pageSize?: number };
+          };
+          const items: Product[] = Array.isArray(response.data)
+            ? (response.data as Product[])
+            : response.data?.items || response.data?.content || [];
+          setProducts(items);
+
+          if (resAny.pagination) {
+            setPagination({
+              items,
+              pagination: resAny.pagination,
+              totalPages: resAny.pagination.totalPages,
+              totalElements: resAny.pagination.totalItems,
+            } as unknown as PageResponse<Product>);
+          } else {
+            setPagination((response.data as PageResponse<Product>) || null);
+          }
         }
       } catch (error: unknown) {
         if ((error as Error).name !== 'CanceledError' && isMounted) {

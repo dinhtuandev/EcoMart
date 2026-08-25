@@ -224,10 +224,13 @@ export const AdminInventoryPage: React.FC = () => {
       );
 
       if (res.data) {
-        const content = res.data.items || res.data.content || [];
+        const resAny = res as unknown as { pagination?: { totalPages?: number; totalItems?: number } };
+        const content: InventoryItem[] = Array.isArray(res.data)
+          ? (res.data as InventoryItem[])
+          : res.data.items || res.data.content || [];
         setItems(content);
-        setTotalPages(res.data.totalPages || 1);
-        setTotalElements(res.data.totalElements || content.length);
+        setTotalPages(resAny.pagination?.totalPages || res.data.totalPages || 1);
+        setTotalElements(resAny.pagination?.totalItems || res.data.totalElements || content.length);
       }
     } catch (error: unknown) {
       const e = error as CustomAxiosError;

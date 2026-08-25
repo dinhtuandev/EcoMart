@@ -103,8 +103,16 @@ export const OrderHistoryPage: React.FC = () => {
         pageSize: 10,
       });
       const data = res.data;
-      setOrders(data?.items || data?.content || []);
-      setTotalPages(data?.pagination?.totalPages ?? data?.totalPages ?? 1);
+      const resAny = res as unknown as {
+        pagination?: { totalPages?: number; totalItems?: number };
+      };
+      const items: Order[] = Array.isArray(data)
+        ? (data as Order[])
+        : data?.items || data?.content || [];
+      setOrders(items);
+      setTotalPages(
+        resAny.pagination?.totalPages ?? data?.pagination?.totalPages ?? data?.totalPages ?? 1
+      );
     } catch {
       showToast('Không thể tải danh sách đơn hàng.', 'error');
     } finally {

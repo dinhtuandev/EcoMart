@@ -80,8 +80,27 @@ export const AdminUserPage: React.FC = () => {
         controller.signal
       )
       .then((response) => {
-        setUsers(response.data.content);
-        setPageData(response.data);
+        const raw = response.data;
+        const resAny = response as unknown as {
+          pagination?: { page?: number; pageSize?: number; totalPages?: number; totalItems?: number };
+        };
+        const content: User[] = Array.isArray(raw)
+          ? (raw as User[])
+          : raw?.items || raw?.content || [];
+        setUsers(content);
+
+        const totalP = resAny.pagination?.totalPages ?? raw?.totalPages ?? 1;
+        const pageNum = resAny.pagination?.page ?? raw?.pageNumber ?? currentPage;
+        const totalElem = resAny.pagination?.totalItems ?? raw?.totalElements ?? content.length;
+
+        setPageData({
+          content,
+          pageNumber: pageNum,
+          pageSize: 10,
+          totalElements: totalElem,
+          totalPages: totalP,
+          last: pageNum >= totalP,
+        });
       })
       .catch((error: unknown) => {
         const customError = error as CustomAxiosError;
@@ -246,10 +265,10 @@ export const AdminUserPage: React.FC = () => {
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-xs flex-shrink-0">
-                            {item.fullName.charAt(0).toUpperCase()}
+                            {(item.fullName || 'U').charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-bold text-slate-900 text-sm">{item.fullName}</p>
+                            <p className="font-bold text-slate-900 text-sm">{item.fullName || 'Người dùng EcoMart'}</p>
                             <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
                               <Mail className="w-3 h-3 text-slate-400" />
                               <span>{item.email}</span>

@@ -19,6 +19,7 @@ import {
   Edit2,
   X,
   Loader2,
+  ArrowRight,
 } from 'lucide-react';
 import { useAuth } from '../providers/AuthProvider';
 import { useToast } from '../context/ToastContext';
@@ -317,18 +318,29 @@ export const ProfilePage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-slate-400 bg-slate-50 px-3.5 py-2 rounded-xl border border-gray-100">
-          <Calendar className="w-4 h-4 text-emerald-600" />
-          <span>Tham gia EcoMart từ 2026</span>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            to="/orders"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-2xl shadow-sm hover:shadow-md transition-all"
+          >
+            <Package className="w-4 h-4" />
+            <span>Lịch Sử Đơn Hàng</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+
+          <div className="flex items-center gap-2 text-xs text-slate-400 bg-slate-50 px-3.5 py-2 rounded-xl border border-gray-100">
+            <Calendar className="w-4 h-4 text-emerald-600" />
+            <span>Tham gia EcoMart từ 2026</span>
+          </div>
         </div>
       </div>
 
       {/* Navigation Tabs (Màu chủ đạo Emerald) */}
-      <div className="flex items-center gap-2 border-b border-gray-200">
+      <div className="flex items-center gap-2 border-b border-gray-200 overflow-x-auto">
         <button
           type="button"
           onClick={() => setActiveTab('info')}
-          className={`flex items-center gap-2 px-5 py-3 text-sm font-bold border-b-2 transition-all duration-200 ${
+          className={`flex items-center gap-2 px-5 py-3 text-sm font-bold border-b-2 transition-all duration-200 flex-shrink-0 ${
             activeTab === 'info'
               ? 'border-emerald-600 text-emerald-600 bg-emerald-50/50 rounded-t-xl'
               : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-gray-300'
@@ -338,10 +350,18 @@ export const ProfilePage: React.FC = () => {
           <span>Thông Tin Cá Nhân</span>
         </button>
 
+        <Link
+          to="/orders"
+          className="flex items-center gap-2 px-5 py-3 text-sm font-bold border-b-2 border-transparent text-slate-600 hover:text-emerald-600 hover:border-emerald-300 transition-all duration-200 flex-shrink-0"
+        >
+          <Package className="w-4 h-4 text-emerald-600" />
+          <span>Đơn Hàng Của Tôi</span>
+        </Link>
+
         <button
           type="button"
           onClick={() => setActiveTab('address')}
-          className={`flex items-center gap-2 px-5 py-3 text-sm font-bold border-b-2 transition-all duration-200 ${
+          className={`flex items-center gap-2 px-5 py-3 text-sm font-bold border-b-2 transition-all duration-200 flex-shrink-0 ${
             activeTab === 'address'
               ? 'border-emerald-600 text-emerald-600 bg-emerald-50/50 rounded-t-xl'
               : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-gray-300'
@@ -359,7 +379,7 @@ export const ProfilePage: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveTab('password')}
-          className={`flex items-center gap-2 px-5 py-3 text-sm font-bold border-b-2 transition-all duration-200 ${
+          className={`flex items-center gap-2 px-5 py-3 text-sm font-bold border-b-2 transition-all duration-200 flex-shrink-0 ${
             activeTab === 'password'
               ? 'border-emerald-600 text-emerald-600 bg-emerald-50/50 rounded-t-xl'
               : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-gray-300'
@@ -372,7 +392,7 @@ export const ProfilePage: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveTab('reviews')}
-          className={`flex items-center gap-2 px-5 py-3 text-sm font-bold border-b-2 transition-all duration-200 ${
+          className={`flex items-center gap-2 px-5 py-3 text-sm font-bold border-b-2 transition-all duration-200 flex-shrink-0 ${
             activeTab === 'reviews'
               ? 'border-emerald-600 text-emerald-600 bg-emerald-50/50 rounded-t-xl'
               : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-gray-300'

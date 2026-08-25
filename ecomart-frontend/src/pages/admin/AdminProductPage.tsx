@@ -62,7 +62,10 @@ export const AdminProductPage: React.FC = () => {
           brandId: selectedBrand > 0 ? selectedBrand : undefined,
         };
         const response = await productApi.adminGetProducts(params, signal);
-        setProducts(response.data?.items || []);
+        const items: Product[] = Array.isArray(response.data)
+          ? (response.data as Product[])
+          : response.data?.items || response.data?.content || [];
+        setProducts(items);
       } catch (error: unknown) {
         if ((error as Error).name !== 'CanceledError') {
           showToast('Không thể tải danh sách sản phẩm quản trị.', 'error');
