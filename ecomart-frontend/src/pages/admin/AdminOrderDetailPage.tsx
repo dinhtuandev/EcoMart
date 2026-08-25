@@ -130,6 +130,7 @@ export const AdminOrderDetailPage: React.FC = () => {
   const [showCancelModal, setShowCancelModal] = useState<boolean>(false);
   const [isConfirming, setIsConfirming] = useState<boolean>(false);
   const [isCompleting, setIsCompleting] = useState<boolean>(false);
+  const [isApprovingPayment, setIsApprovingPayment] = useState<boolean>(false);
   const [isUpdatingPayment, setIsUpdatingPayment] = useState<boolean>(false);
   const [showPaymentDropdown, setShowPaymentDropdown] = useState<boolean>(false);
 
@@ -150,6 +151,21 @@ export const AdminOrderDetailPage: React.FC = () => {
   useEffect(() => {
     fetchOrder();
   }, [fetchOrder]);
+
+  const handleApprovePayment = async (): Promise<void> => {
+    if (!order) return;
+    setIsApprovingPayment(true);
+    try {
+      const res = await orderApi.adminApprovePayment(order.id);
+      setOrder(res.data);
+      showToast('Đã xác nhận thanh toán và phê duyệt đơn hàng thành công.', 'success');
+    } catch (error: unknown) {
+      const e = error as CustomAxiosError;
+      showToast(e.response?.data?.message || 'Lỗi xác nhận thanh toán.', 'error');
+    } finally {
+      setIsApprovingPayment(false);
+    }
+  };
 
   const handleConfirm = async (): Promise<void> => {
     if (!order) return;
@@ -256,6 +272,21 @@ export const AdminOrderDetailPage: React.FC = () => {
 
           {/* Admin Action Buttons */}
           <div className="flex items-center gap-2 flex-wrap">
+            {order.paymentStatus === 'UNPAID' && order.status !== 'CANCELLED' && (
+              <button
+                type="button"
+                onClick={handleApprovePayment}
+                disabled={isApprovingPayment}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-teal-600 hover:bg-teal-700 active:scale-[0.98] text-white text-xs font-black rounded-xl shadow-md shadow-teal-600/20 disabled:opacity-50"
+              >
+                {isApprovingPayment ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <CreditCard className="w-3.5 h-3.5" />
+                )}
+                Duyệt Thanh Toán
+              </button>
+            )}
             {order.status === 'PENDING' && (
               <button
                 type="button"
@@ -461,6 +492,21 @@ export const AdminOrderDetailPage: React.FC = () => {
                     <span>Thanh toán lúc:</span>
                     <span className="font-semibold">{formatDate(order.paidAt)}</span>
                   </div>
+                )}
+                {order.paymentStatus === 'UNPAID' && order.status !== 'CANCELLED' && (
+                  <button
+                    type="button"
+                    onClick={handleApprovePayment}
+                    disabled={isApprovingPayment}
+                    className="w-full mt-2 py-2 px-3 bg-teal-600 hover:bg-teal-700 active:scale-[0.98] text-white text-xs font-bold rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all disabled:opacity-50"
+                  >
+                    {isApprovingPayment ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                    )}
+                    Xác Nhận Khách Đã Thanh Toán
+                  </button>
                 )}
               </div>
             </div>

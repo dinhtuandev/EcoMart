@@ -107,6 +107,12 @@ export const orderApi = {
     data: UpdatePaymentStatusPayload
   ): Promise<ApiResponse<Order>> =>
     axiosClient.patch(`/admin/orders/${orderId}/payment-status`, data),
+
+  /**
+   * Admin xác nhận / phê duyệt đã thanh toán thành công (UNPAID → PAID & PENDING → CONFIRMED)
+   */
+  adminApprovePayment: (orderId: number): Promise<ApiResponse<Order>> =>
+    axiosClient.post(`/admin/orders/${orderId}/approve-payment`),
 };
 
 export default orderApi;

@@ -11,6 +11,7 @@ import {
   Loader2,
   X,
   AlertCircle,
+  CreditCard,
 } from 'lucide-react';
 import { orderApi } from '../../services/orderApi';
 import { useToast } from '../../context/ToastContext';
@@ -181,6 +182,7 @@ export const AdminOrderPage: React.FC = () => {
   // Confirm action state
   const [confirmingId, setConfirmingId] = useState<number | null>(null);
   const [completingId, setCompletingId] = useState<number | null>(null);
+  const [approvingId, setApprovingId] = useState<number | null>(null);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -225,6 +227,20 @@ export const AdminOrderPage: React.FC = () => {
   const handleTabChange = (tab: TabStatus): void => {
     setActiveTab(tab);
     setCurrentPage(1);
+  };
+
+  const handleApprovePayment = async (orderId: number): Promise<void> => {
+    setApprovingId(orderId);
+    try {
+      const res = await orderApi.adminApprovePayment(orderId);
+      setOrders((prev) => prev.map((o) => (o.id === orderId ? res.data : o)));
+      showToast('Đã phê duyệt thanh toán thành công (Chuyển trạng thái ĐÃ XÁC NHẬN).', 'success');
+    } catch (error: unknown) {
+      const customError = error as CustomAxiosError;
+      showToast(customError.response?.data?.message || 'Lỗi phê duyệt thanh toán.', 'error');
+    } finally {
+      setApprovingId(null);
+    }
   };
 
   const handleConfirmOrder = async (orderId: number): Promise<void> => {
@@ -420,6 +436,22 @@ export const AdminOrderPage: React.FC = () => {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1.5 flex-nowrap">
+                            {order.paymentStatus === 'UNPAID' && order.status !== 'CANCELLED' && (
+                              <button
+                                type="button"
+                                onClick={() => handleApprovePayment(order.id)}
+                                disabled={approvingId === order.id}
+                                title="Phê duyệt đã thanh toán thành công"
+                                className="px-2 py-1 bg-teal-600 hover:bg-teal-700 text-white text-[10px] font-bold rounded-lg flex items-center gap-1 shadow-xs disabled:opacity-50"
+                              >
+                                {approvingId === order.id ? (
+                                  <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                                ) : (
+                                  <CreditCard className="w-2.5 h-2.5" />
+                                )}
+                                Duyệt TT
+                              </button>
+                            )}
                             {order.status === 'PENDING' && (
                               <button
                                 type="button"
