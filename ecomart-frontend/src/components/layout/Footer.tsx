@@ -79,6 +79,15 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <Link
+                  to="/orders"
+                  className="hover:text-emerald-400 transition-colors inline-flex items-center gap-1.5"
+                >
+                  <ArrowRight className="w-3 h-3 text-slate-600" />
+                  Lịch sử đơn hàng
+                </Link>
+              </li>
+              <li>
+                <Link
                   to="/contact"
                   className="hover:text-emerald-400 transition-colors inline-flex items-center gap-1.5"
                 >
