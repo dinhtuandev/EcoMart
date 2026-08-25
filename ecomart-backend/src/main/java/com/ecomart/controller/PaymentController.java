@@ -52,4 +52,14 @@ public class PaymentController {
         }
         return ResponseEntity.ok(ApiResponse.success("Xử lý thanh toán SePay thành công.", null));
     }
+
+    @PostMapping("/mock/success")
+    public ResponseEntity<ApiResponse<Void>> handleMockPaymentSuccess(@RequestBody Map<String, Object> body) {
+        Long orderId = body.get("orderId") != null ? Long.valueOf(body.get("orderId").toString()) : null;
+        String orderCode = body.get("orderCode") != null ? body.get("orderCode").toString() : null;
+        String gateway = body.get("gateway") != null ? body.get("gateway").toString() : "VNPAY";
+
+        paymentService.processMockPaymentSuccess(orderId, orderCode, gateway);
+        return ResponseEntity.ok(ApiResponse.success("Giả lập thanh toán thành công.", null));
+    }
 }

@@ -326,6 +326,54 @@ public class PaymentServiceImpl implements PaymentService {
         log.info("SePay Webhook: Successfully processed payment for Order '{}', Amount: {}", orderCode, order.getTotalAmount());
     }
 
+    @Override
+    @Transactional
+    public void processMockPaymentSuccess(Long orderId, String orderCode, String gatewayName) {
+        Order order;
+        if (orderId != null && orderId > 0) {
+            order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Đơn hàng không tồn tại với ID: " + orderId));
+        } else if (orderCode != null && !orderCode.isBlank()) {
+            order = orderRepository.findByOrderCode(orderCode)
+                    .orElseThrow(() -> new ResourceNotFoundException("Đơn hàng không tồn tại với mã: " + orderCode));
+        } else {
+            throw new com.ecomart.exception.BadRequestException("Cần cung cấp orderId hoặc orderCode");
+        }
+
+        if (order.getPaymentStatus() == PaymentStatus.PAID) {
+            return;
+        }
+
+        order.setPaymentStatus(PaymentStatus.PAID);
+        order.setPaidAt(LocalDateTime.now());
+        if (order.getStatus() == com.ecomart.entity.enums.OrderStatus.PENDING) {
+            order.setStatus(com.ecomart.entity.enums.OrderStatus.CONFIRMED);
+        }
+        orderRepository.save(order);
+
+        final PaymentGateway gateway = (gatewayName != null && gatewayName.toUpperCase().contains("SEPAY"))
+                ? PaymentGateway.SEPAY
+                : PaymentGateway.VNPAY;
+
+        PaymentTransaction tx = paymentTransactionRepository
+                .findFirstByOrderIdAndGatewayAndStatusOrderByCreatedAtDesc(order.getId(), gateway, PaymentTransactionStatus.PENDING)
+                .orElseGet(() -> PaymentTransaction.builder()
+                        .order(order)
+                        .gateway(gateway)
+                        .paymentRef("MOCK-" + order.getOrderCode())
+                        .amount(order.getTotalAmount())
+                        .status(PaymentTransactionStatus.SUCCESS)
+                        .createdAt(LocalDateTime.now())
+                        .build());
+
+        tx.setStatus(PaymentTransactionStatus.SUCCESS);
+        tx.setGatewayTransactionNo("MOCK-" + System.currentTimeMillis());
+        tx.setRawResponse("{\"mock\":true,\"gateway\":\"" + gateway + "\",\"timestamp\":\"" + LocalDateTime.now() + "\"}");
+        paymentTransactionRepository.save(tx);
+
+        log.info("Mock Payment: Successfully marked Order '{}' (ID: {}) as PAID via {}", order.getOrderCode(), order.getId(), gateway);
+    }
+
     private String extractOrderCodeFromPaymentRef(String paymentRef) {
         if (paymentRef == null) {
             return null;

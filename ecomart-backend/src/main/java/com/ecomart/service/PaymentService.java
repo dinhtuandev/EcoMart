@@ -18,4 +18,6 @@ public interface PaymentService {
     VNPayReturnResponse processVNPayReturn(Map<String, String> vnpParams);
 
     void processSePayWebhook(String authHeader, SePayWebhookRequest request);
+
+    void processMockPaymentSuccess(Long orderId, String orderCode, String gatewayName);
 }
