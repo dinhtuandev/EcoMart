@@ -1,11 +1,13 @@
 # ============================================================
 # Dockerfile - EcoMart Backend Spring Boot Service
+# Optimized for Render: split COPY to cache Maven deps layer.
 # ============================================================
 
 # Stage 1: Build stage với Maven & OpenJDK 17
 FROM maven:3.9-eclipse-temurin-17-alpine AS build
 WORKDIR /app
 COPY pom.xml .
+RUN mvn -B -e dependency:go-offline
 COPY src ./src
 RUN mvn clean package -DskipTests
 
@@ -13,8 +15,9 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0 -Dfile.encoding=UTF-8"
 EXPOSE 8081
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
 
 # ============================================================
 # NOTE DÀNH CHO TEAM (DATABASE SETUP):
