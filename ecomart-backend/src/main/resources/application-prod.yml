@@ -1,0 +1,101 @@
+# ============================================================
+#  Profile "prod" — dùng cho deployment lên Render.
+#  Kích hoạt bằng biến môi trường SPRING_PROFILES_ACTIVE=prod.
+#  DB, JWT, payment keys, CORS đều lấy từ env vars do Render cung cấp.
+# ============================================================
+
+server:
+  port: ${SERVER_PORT:8081}
+  forward-headers-strategy: framework
+
+spring:
+  application:
+    name: ecomart-backend
+
+  docker:
+    compose:
+      enabled: false
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+      connection-timeout: 20000
+
+  jpa:
+    hibernate:
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:validate}
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  jackson:
+    time-zone: UTC
+    date-format: yyyy-MM-dd'T'HH:mm:ss'Z'
+
+# Logging — production: chỉ INFO, không show SQL
+logging:
+  level:
+    root: INFO
+    com.ecomart: INFO
+    org.hibernate.SQL: WARN
+
+# Resend Email Configuration
+resend:
+  api-key: ${RESEND_API_KEY}
+  from-email: ${RESEND_FROM_EMAIL}
+
+# Application Custom Properties
+app:
+  jwt:
+    secret: ${APP_JWT_SECRET}
+    expiration-ms: ${APP_JWT_EXPIRATION_MS:86400000}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  payment:
+    vnpay:
+      tmn-code: ${VNPAY_TMN_CODE:ECOMART1}
+      hash-secret: ${VNPAY_HASH_SECRET:9A4F2C8D7E1B5A3F6C0D9E8F7A6B5C4D}
+      pay-url: ${VNPAY_PAY_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+      return-url: ${VNPAY_RETURN_URL:http://localhost:3000/payment/vnpay/return}
+    sepay:
+      api-key: ${SEPAY_API_KEY:sepay_secret_api_key}
+      account-number: ${SEPAY_ACCOUNT_NUMBER:109876543210}
+      bank: ${SEPAY_BANK:970415}
+      qr-url-template: ${SEPAY_QR_URL_TEMPLATE:https://img.vietqr.io/image/{bank}-{acc}-compact2.png?amount={amount}&addInfo={des}}
+
+# OpenAPI / Swagger UI
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+
+# Actuator — Render health check + UptimeRobot ping
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
