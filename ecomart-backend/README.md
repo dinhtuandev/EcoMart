@@ -6,7 +6,12 @@
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
 ![Spring Security](https://img.shields.io/badge/Spring%20Security-6.3-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Flyway](https://img.shields.io/badge/Flyway-Migrations-CC0200?style=for-the-badge&logo=flyway&logoColor=white)
+![Actuator](https://img.shields.io/badge/Spring%20Actuator-Health-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
 ![Resend](https://img.shields.io/badge/Resend-Email%20API-000000?style=for-the-badge&logo=resend&logoColor=white)
+![Render](https://img.shields.io/badge/Deploy-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)
+![Supabase](https://img.shields.io/badge/Database-Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![Tests](https://img.shields.io/badge/Tests-220%20Passed%20(100%25)-brightgreen?style=for-the-badge&logo=junit5&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
 
@@ -18,7 +23,8 @@
 6. [📚 Tài liệu API](#-tài-liệu-api)
 7. [🧪 Kiểm thử](#-kiểm-thử)
 8. [🐳 Chạy với Docker](#-chạy-với-docker)
-9. [🏗️ Cấu trúc thư mục](#️-cấu-trúc-thư-mục)
+9. [☁️ Triển khai (Render + Supabase)](#️-triển-khai-render--supabase)
+10. [🏗️ Cấu trúc thư mục](#️-cấu-trúc-thư-mục)
 
 ---
 
@@ -131,9 +137,14 @@ flowchart TB
 | **Core Platform** | Java 17 / Java 21, Spring Boot 3.3.5 |
 | **Security & Auth** | Spring Security 6, JJWT 0.12.6, BCrypt Password Encoder |
 | **Data & ORM** | Spring Data JPA, Hibernate 6, PostgreSQL 16 (H2 cho Unit Testing) |
+| **Database Migrations** | Flyway Core + Flyway PostgreSQL (versioned `V1__baseline.sql`, …) |
+| **Observability** | Spring Boot Actuator (`/actuator/health`, `/actuator/info`) |
 | **Email Gateway** | Resend Java SDK 3.1.0 (Async HTML Template) |
 | **Payment Integrations** | VNPay Sandbox API (v2.1.0), SePay VietQR Napas 247 |
 | **API Documentation** | Springdoc OpenAPI 2.6.0, Swagger UI 3.0 |
+| **Containerization** | Docker (multi-stage `Dockerfile`), Docker Compose (Postgres + MSSQL) |
+| **Deployment** | Render (Web Service, free plan, Singapore region), Render Blueprint (`render.yaml`) |
+| **Managed Database** | Supabase Postgres (free tier 500MB) cho production |
 | **Utilities** | Lombok, Jackson (JSON), Dotenv (springboot3-dotenv) |
 | **Build & Tooling** | Apache Maven, Maven Wrapper (`./mvnw`) |
 
@@ -254,22 +265,77 @@ docker compose up -d --build
 
 ---
 
+## ☁️ Triển khai (Render + Supabase)
+
+Hệ thống hỗ trợ triển khai production lên **Render** (free tier) với **Supabase Postgres** làm database. Cấu hình sẵn trong repo, không cần code thêm.
+
+### Tech stack triển khai
+- **Render Web Service**: Docker runtime, free plan 512MB RAM, region Singapore, cold start ~30-50s.
+- **Supabase Postgres**: 500MB free tier, không expire (khác với Render Postgres free 90 ngày).
+- **Spring Boot Actuator**: cung cấp `/actuator/health` cho Render health check và UptimeRobot keep-alive.
+- **Flyway**: quản lý schema migrations version-controlled (`V1__baseline.sql`, `V2__...`).
+- **UptimeRobot**: ping health endpoint mỗi 14 phút để giữ service awake.
+
+### Profile triển khai
+- `application.yml` — mặc định, dùng cho local dev (H2 in-memory).
+- `application-docker.yml` — profile `docker`, kết nối Postgres container trong `compose.yaml`.
+- `application-prod.yml` — profile `prod`, đọc toàn bộ cấu hình từ biến môi trường, `ddl-auto: validate`, Flyway bật.
+
+### Bắt đầu nhanh
+1. Tạo Supabase project tại https://supabase.com (region Singapore).
+2. Lấy JDBC URL có dạng `jdbc:postgresql://...supabase.com:5432/postgres?sslmode=require`.
+3. Tạo Web Service trên Render từ Blueprint (Render tự đọc `render.yaml`).
+4. Set các biến môi trường (DB, JWT secret, Resend, payment keys, CORS) trong Render Dashboard.
+5. Đợi build ~5-8 phút, verify `https://<service>.onrender.com/actuator/health` trả `UP`.
+6. Setup UptimeRobot ping `/actuator/health` mỗi 14 phút.
+
+> 📖 Hướng dẫn chi tiết từng bước (có troubleshooting): xem [RENDER_DEPLOY.md](./RENDER_DEPLOY.md)
+> 📋 Checklist thao tác: xem [DEPLOY_CHECKLIST.md](./DEPLOY_CHECKLIST.md)
+
+### Biến môi trường production (bắt buộc)
+
+| Biến | Mô tả |
+|:---|:---|
+| `SPRING_PROFILES_ACTIVE` | `prod` |
+| `SPRING_DATASOURCE_URL` | JDBC URL từ Supabase (có `?sslmode=require`) |
+| `SPRING_DATASOURCE_USERNAME` | `postgres` |
+| `SPRING_DATASOURCE_PASSWORD` | password Supabase |
+| `SPRING_JPA_HIBERNATE_DDL_AUTO` | `update` lần đầu, sau đó `validate` |
+| `APP_JWT_SECRET` | `openssl rand -base64 64` |
+| `RESEND_API_KEY`, `RESEND_FROM_EMAIL` | Resend dashboard |
+| `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET`, `VNPAY_RETURN_URL` | VNPay |
+| `SEPAY_API_KEY`, `SEPAY_ACCOUNT_NUMBER` | SePay |
+| `CORS_ALLOWED_ORIGINS` | domain frontend, comma-separated |
+
+---
+
 ## 🏗️ Cấu trúc thư mục
 
 ```text
 ecomart-backend/
 ├── src/main/java/com/ecomart/
-│   ├── config/          # Security, CORS, OpenAPI
+│   ├── config/          # Security, CORS, OpenAPI, Async, Payment
 │   ├── security/        # JWT provider, filter, principal
+│   ├── controller/      # REST controllers
+│   ├── service/         # Business logic (@Transactional)
+│   ├── repository/      # Spring Data JPA repositories
+│   ├── entity/          # JPA entities + enums
 │   ├── dto/             # Request/Response DTOs
-│   └── exception/       # Global exception handler
+│   ├── specification/   # JPA Specifications cho filter động
+│   ├── util/            # Utilities, helpers
+│   └── exception/       # Global exception handler (RFC 7807)
 ├── src/main/resources/
-│   ├── application.yml          # Cấu hình chính (DB, JWT, docs)
-│   └── application-docker.yml   # Profile "docker" (PostgreSQL)
-├── Dockerfile           # Build image ứng dụng (multi-stage)
-├── .dockerignore        # Loại trừ file không cần thiết khi build
-├── compose.yaml         # PostgreSQL + app (Docker Compose)
-├── docs/DOCKER.md       # Hướng dẫn chạy bằng Docker
+│   ├── application.yml          # Cấu hình mặc định (local dev, H2)
+│   ├── application-docker.yml   # Profile "docker" (Postgres container)
+│   ├── application-prod.yml     # Profile "prod" (Render, env-driven)
+│   └── db/migration/            # Flyway versioned migrations
+├── src/test/                    # Unit + Integration tests (220 tests)
+├── Dockerfile           # Multi-stage build, Maven cache layer
+├── .dockerignore        # Loại trừ file không cần thiết
+├── compose.yaml         # Docker Compose (Postgres + MSSQL)
+├── render.yaml          # Render Blueprint (free tier, Singapore)
+├── RENDER_DEPLOY.md     # Hướng dẫn deploy production
+├── DEPLOY_CHECKLIST.md  # Checklist thao tác deploy
 └── pom.xml              # Maven configuration
 ```
 
