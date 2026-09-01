@@ -65,6 +65,9 @@ public class SecurityConfig {
                         // Swagger UI & OpenAPI Docs
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
+                        // Actuator health probe (Render health check + UptimeRobot keep-alive)
+                        .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
+
                         // Admin Endpoints
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 
