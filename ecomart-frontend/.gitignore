@@ -1,0 +1,37 @@
+# Thư mục phụ thuộc (Dependencies)
+node_modules/
+.pnpm-store/
+
+# Thư mục build đầu ra
+dist/
+dist-ssr/
+build/
+*.local
+
+# Các file biến môi trường chứa thông tin nhạy cảm
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# File log của hệ thống và package manager
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Thư mục/file cấu hình của Editor/IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+
+# Cache của Vite/ESLint
+.eslintcache
+.vite/
+# File env gốc (đã track trước đây — cần git rm --cached .env để ngừng track)
+.env
