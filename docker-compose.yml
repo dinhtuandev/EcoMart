@@ -1,0 +1,95 @@
+services:
+  # ------------------------------------------------------------
+  # 1. POSTGRESQL DATABASE
+  # ------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: ecomart-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ecomart_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ecomart_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ecomart-network
+
+  # ------------------------------------------------------------
+  # 2. SPRING BOOT BACKEND API
+  # ------------------------------------------------------------
+  backend:
+    build:
+      context: ./ecomart-backend
+      dockerfile: Dockerfile
+    container_name: ecomart-backend
+    restart: unless-stopped
+    ports:
+      - '8081:8081'
+    env_file:
+      - ./.env
+    environment:
+      SERVER_PORT: 8081
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ecomart_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgrespassword
+      APP_JWT_SECRET: ${APP_JWT_SECRET}
+      APP_JWT_EXPIRATION_MS: 86400000
+      APP_JWT_REFRESH_EXPIRATION_MS: 604800000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ecomart-network
+
+  # ------------------------------------------------------------
+  # 3. REACT FRONTEND (NGINX)
+  # ------------------------------------------------------------
+  frontend:
+    build:
+      context: ./ecomart-frontend
+      dockerfile: Dockerfile
+    container_name: ecomart-frontend
+    restart: unless-stopped
+    ports:
+      - '3000:80'
+    depends_on:
+      - backend
+    networks:
+      - ecomart-network
+
+    # ------------------------------------------------------------
+    # 4. PGADMIN
+    # ------------------------------------------------------------
+    # Uncomment when database GUI is needed.
+
+    # pgadmin:
+    #   image: dpage/pgadmin4:latest
+    #   container_name: ecomart-pgadmin
+    #   restart: unless-stopped
+    #   environment:
+    #     PGADMIN_DEFAULT_EMAIL: admin@ecomart.com
+    #     PGADMIN_DEFAULT_PASSWORD: admin
+    #     PGADMIN_CONFIG_SERVER_MODE: 'False'
+    #   ports:
+    #     - '5050:80'
+    #   depends_on:
+    #     postgres:
+    #       condition: service_healthy
+    #   networks:
+    #     - ecomart-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  ecomart-network:
+    driver: bridge

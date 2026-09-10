@@ -1,0 +1,49 @@
+# User-requested exclusions
+.claude/
+.kilo/
+tools/
+.freebuff/
+
+# Build artifacts & dependencies
+**/target/
+**/dist/
+**/dist-ssr/
+**/node_modules/
+**/.pnpm-store/
+**/build/
+.mvn/wrapper/maven-wrapper.jar
+
+# Environment & local secrets
+**/.env
+**/.env.*
+!**/.env.example
+*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor & IDE configs
+.idea/
+.vscode/
+*.swp
+*.swo
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+.classpath
+.project
+.settings/
+.factorypath
+.springBeans
+.sts4-cache
+.apt_generated/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+ehthumbs.db
