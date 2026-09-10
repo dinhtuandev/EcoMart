@@ -1,0 +1,60 @@
+# Render Blueprint — EcoMart Backend (Spring Boot, Docker runtime)
+# Deploy: Render Dashboard → New → Blueprint → chọn repo này.
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: ecomart-backend
+    runtime: docker
+    dockerfilePath: ./ecomart-backend/Dockerfile
+    dockerContext: ./ecomart-backend
+    plan: free
+    region: singapore
+    healthCheckPath: /actuator/health
+    envVars:
+      # Render web service mặc định bind PORT=10000
+      - key: SERVER_PORT
+        value: "10000"
+      # ── Database: chọn 1 trong 2 rồi điền giá trị thật vào dashboard ──
+      #   A) Render PostgreSQL: convert External URL
+      #      postgresql://user:pass@host/db → jdbc:postgresql://host/db
+      #   B) Neon (free không hết hạn): copy Pooled connection string,
+      #      giữ sslmode=require:
+      #      jdbc:postgresql://ep-xxx-pooler.<region>.aws.neon.tech/db?sslmode=require
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+      # ── CORS: origin frontend trên Vercel (phẩy nếu nhiều) ──
+      - key: APP_CORS_ALLOWED_ORIGIN_PATTERNS
+        sync: false
+      # ── Bảo mật: secret tự sinh ngẫu nhiên lần đầu deploy ──
+      - key: APP_JWT_SECRET
+        generateValue: true
+      # ── Gmail SMTP ──
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      # ── OAuth2 / Social Login (Google & Facebook) ──
+      - key: clientIdGoogle
+        sync: false
+      - key: clientSecretGoogle
+        sync: false
+      - key: clientIdFacebook
+        sync: false
+      - key: clientSecretFacebook
+        sync: false
+      # ── Thanh toán: dùng default sandbox trong application.yml,
+      #    thêm VNPAY_*/SEPAY_* tại dashboard nếu cần override ──
+
+# Tùy chọn: uncomment để Render tự cấp database kèm blueprint.
+# Free tier DB chỉ sống 30 ngày — phù hợp demo, không phải production.
+#
+# databases:
+#   - name: ecomart-db
+#     databaseName: ecomart_db
+#     plan: free
+#     region: singapore

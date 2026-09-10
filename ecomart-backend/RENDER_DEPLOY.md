@@ -1,6 +1,6 @@
 # Deploy EcoMart Backend lên Render (Free) + Supabase Postgres
 
-Hướng dẫn triển khai Web Service trên Render (free tier) với Supabase Postgres làm database production. Tài liệu giả định người thực hiện đã có tài khoản GitHub, Render, Supabase và Resend.
+Hướng dẫn triển khai Web Service trên Render (free tier) với Supabase Postgres làm database production. Tài liệu giả định người thực hiện đã có tài khoản GitHub, Render, Supabase và tài khoản Gmail (bật 2FA để tạo App Password).
 
 ---
 
@@ -63,7 +63,7 @@ Supabase cho phép mọi IP mặc định. Kiểm tra tại **Database** → **N
 
 Repo đã có sẵn các file cần thiết:
 - `Dockerfile` (multi-stage, Maven cache layer)
-- `render.yaml` (Blueprint)
+- `render.yaml` ở thư mục gốc repo (Blueprint)
 - `src/main/resources/application-prod.yml` (prod profile)
 - `src/main/resources/db/migration/V1__baseline.sql` (Flyway baseline)
 - `pom.xml` (actuator + flyway deps)
@@ -89,8 +89,8 @@ git push origin dev
 ### 4.1 — Khởi tạo Blueprint
 1. Mở https://dashboard.render.com → đăng nhập.
 2. Bấm **New +** → **Blueprint**.
-3. Kết nối GitHub repo `ecomart-backend` (nếu chưa → **Configure account**).
-4. Chọn branch: `dev` (hoặc `main` tùy convention repo).
+3. Kết nối GitHub repo monorepo `EcoMart` (nếu chưa → **Configure account**).
+4. Chọn branch: `main`.
 5. Render đọc `render.yaml` → hiển thị service `ecomart-backend` → bấm **Apply**.
 
 Service mặc định:
@@ -111,8 +111,8 @@ Vào service `ecomart-backend` → **Environment** → thêm/sửa các biến:
 | `SPRING_JPA_HIBERNATE_DDL_AUTO` | `update` | lần đầu để JPA tạo schema |
 | `APP_JWT_SECRET` | output `openssl rand` | local |
 | `APP_JWT_EXPIRATION_MS` | `86400000` | set thẳng |
-| `RESEND_API_KEY` | `re_xxx` | Resend dashboard |
-| `RESEND_FROM_EMAIL` | email đã verify | Resend |
+| `MAIL_USERNAME` | địa chỉ Gmail gửi OTP | tài khoản Gmail |
+| `MAIL_PASSWORD` | App Password 16 ký tự (bật 2FA) | Google Account → Security |
 | `VNPAY_TMN_CODE` | sandbox hoặc prod | VNPay |
 | `VNPAY_HASH_SECRET` | sandbox hoặc prod | VNPay |
 | `VNPAY_PAY_URL` | `https://sandbox.vnpayment.vn/paymentv2/vpcpay.html` | set thẳng |
@@ -120,7 +120,7 @@ Vào service `ecomart-backend` → **Environment** → thêm/sửa các biến:
 | `SEPAY_API_KEY` | sepay key | SePay |
 | `SEPAY_ACCOUNT_NUMBER` | số tài khoản | SePay |
 | `SEPAY_BANK` | `970415` | set thẳng |
-| `CORS_ALLOWED_ORIGINS` | `https://frontend.com,http://localhost:3000` | frontend domain, comma-separated |
+| `APP_CORS_ALLOWED_ORIGIN_PATTERNS` | `https://<frontend-domain>.vercel.app` | domain Vercel, comma-separated |
 
 Bấm **Save Changes** → Render tự động redeploy.
 
@@ -212,7 +212,7 @@ Sau lần deploy đầu tiên (schema đã được JPA tạo):
 | `Schema-validation: missing table [xxx]` | DB chưa có schema, đang ở `ddl-auto=validate` | Tạm đổi về `update`, redeploy, sau đó đổi lại `validate` |
 | Cold start 30-50s | Render Free tắt service khi không có traffic | Setup UptimeRobot như mục 6 |
 | `Connection refused` tới Postgres | Sai host/port | Kiểm tra Connection string từ Supabase. Pooler (6543) vs Direct (5432) |
-| Email không gửi | Resend chưa verify domain | Vào Resend → **Domains** → add + verify |
+| Email không gửi | Chưa set MAIL_* hoặc dùng mật khẩu thường | Tạo Google App Password (2FA), điền vào MAIL_USERNAME/MAIL_PASSWORD |
 | Build fail với OOM | Maven cần > 512MB RAM trong build | Render free plan giới hạn 512MB; cân nhắc nâng cấp Starter ($7/mo) |
 | App crash sau khi start | Thiếu biến môi trường | Check tab **Logs** trên Render, tìm `null` hoặc `Could not resolve placeholder` |
 | Disk không persistent | Render Free không lưu file sau restart | Upload ảnh/file phải dùng S3/Cloudinary, không lưu local |
@@ -224,7 +224,7 @@ Sau lần deploy đầu tiên (schema đã được JPA tạo):
 ```
 ecomart-backend/
 ├── Dockerfile                              # Multi-stage build, cache Maven deps
-├── render.yaml                             # Render Blueprint, free plan Singapore
+├── render.yaml                             # Render Blueprint ở ROOT repo (xem /render.yaml), free plan Singapore
 ├── .dockerignore                           # Loại bỏ file không cần trong build context
 ├── src/main/resources/
 │   ├── application.yml                     # Default profile (local dev)

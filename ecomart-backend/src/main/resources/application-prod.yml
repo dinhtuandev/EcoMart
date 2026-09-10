@@ -1,7 +1,12 @@
 # ============================================================
 #  Profile "prod" — dùng cho deployment lên Render.
 #  Kích hoạt bằng biến môi trường SPRING_PROFILES_ACTIVE=prod.
-#  DB, JWT, payment keys, CORS đều lấy từ env vars do Render cung cấp.
+#  DB, JWT, mail, OAuth, payment keys, CORS đều lấy từ env vars
+#  do Render cung cấp (xem render.yaml ở thư mục gốc repo).
+#  Tên biến phải khớp code: JwtTokenProvider (app.jwt.*),
+#  CorsConfig (app.cors.allowed-origin-patterns),
+#  EmailServiceImpl (spring.mail.* ← MAIL_USERNAME/PASSWORD),
+#  SocialAuthServiceImpl (app.oauth2.*).
 # ============================================================
 
 server:
@@ -46,6 +51,24 @@ spring:
     time-zone: UTC
     date-format: yyyy-MM-dd'T'HH:mm:ss'Z'
 
+  # Gmail SMTP — OTP xác thực email & đặt lại mật khẩu.
+  # MAIL_PASSWORD phải là Google App Password (16 ký tự từ 2FA).
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
 # Logging — production: chỉ INFO, không show SQL
 logging:
   level:
@@ -53,18 +76,21 @@ logging:
     com.ecomart: INFO
     org.hibernate.SQL: WARN
 
-# Resend Email Configuration
-resend:
-  api-key: ${RESEND_API_KEY}
-  from-email: ${RESEND_FROM_EMAIL}
-
 # Application Custom Properties
 app:
   jwt:
     secret: ${APP_JWT_SECRET}
     expiration-ms: ${APP_JWT_EXPIRATION_MS:86400000}
+    refresh-expiration-ms: ${APP_JWT_REFRESH_EXPIRATION_MS:604800000}
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+    allowed-origin-patterns: ${APP_CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:3000}
+  oauth2:
+    google:
+      client-id: ${clientIdGoogle:}
+      client-secret: ${clientSecretGoogle:}
+    facebook:
+      client-id: ${clientIdFacebook:}
+      client-secret: ${clientSecretFacebook:}
   payment:
     vnpay:
       tmn-code: ${VNPAY_TMN_CODE:ECOMART1}

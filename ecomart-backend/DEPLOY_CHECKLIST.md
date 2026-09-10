@@ -76,9 +76,9 @@ Kỳ vọng: cả 2 = `True`
 | # | Thao tác | Trạng thái |
 |---|---|---|
 | 5.1 | `git add -A && git commit -m "..."` trong folder `ecomart-backend` | [ ] |
-| 5.2 | `git push origin dev` lên GitHub | [ ] |
+| 5.2 | `git push origin main` lên GitHub | [ ] |
 | 5.3 | Render Dashboard → **New +** → **Blueprint** | [ ] |
-| 5.4 | Connect GitHub repo `ecomart-backend`, chọn branch `dev` | [ ] |
+| 5.4 | Connect GitHub repo `EcoMart`, chọn branch `main` | [ ] |
 | 5.5 | Bấm **Apply** → Render đọc `render.yaml` → tạo service | [ ] |
 | 5.6 | Vào **Environment** → điền 14 biến từ bảng dưới | [ ] |
 | 5.7 | Bấm **Save Changes** → đợi redeploy ~5-8 phút | [ ] |
@@ -93,14 +93,14 @@ Kỳ vọng: cả 2 = `True`
 | `SPRING_DATASOURCE_PASSWORD` | từ bước 4.2 |
 | `SPRING_JPA_HIBERNATE_DDL_AUTO` | `update` (lần đầu) |
 | `APP_JWT_SECRET` | `openssl rand -base64 64` (chạy trên máy local) |
-| `RESEND_API_KEY` | từ Resend dashboard |
-| `RESEND_FROM_EMAIL` | email đã verify trên Resend |
+| `MAIL_USERNAME` | địa chỉ Gmail gửi OTP |
+| `MAIL_PASSWORD` | Google App Password 16 ký tự (bật 2FA) |
 | `VNPAY_TMN_CODE` | sandbox hoặc prod |
 | `VNPAY_HASH_SECRET` | sandbox hoặc prod |
 | `VNPAY_RETURN_URL` | `https://<frontend-domain>/payment/vnpay/return` |
 | `SEPAY_API_KEY` | sepay dashboard |
 | `SEPAY_ACCOUNT_NUMBER` | số tài khoản thật |
-| `CORS_ALLOWED_ORIGINS` | domain frontend (VD: `https://ecomart.vercel.app`) |
+| `APP_CORS_ALLOWED_ORIGIN_PATTERNS` | domain Vercel (VD: `https://ecomart.vercel.app`) |
 
 ---
 
