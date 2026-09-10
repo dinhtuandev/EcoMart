@@ -9,9 +9,8 @@
 >
 > **⏳ Còn treo (cần bạn quyết định / tự làm):**
 > 1. `.github/modernize/java-upgrade` — chưa xoá, chờ xác nhận không còn dùng GitHub Copilot App Modernization.
-> 2. `ecomart-frontend/.env` vẫn đang được track trong git (chứa mỗi `VITE_API_BASE_URL`, không có secret) — muốn ngừng track: `git rm --cached .env` trong repo frontend.
-> 3. Push backup branch của 2 repo lên GitHub remote nếu muốn backup ngoài máy.
-> 4. Tuỳ chọn chưa làm: đổi `vite.config.js` → `vite.config.ts`.
+> 2. `ecomart-frontend/.env` ✅ Đã gỡ khỏi git tracking (chỉ còn trên local).
+> 3. Đã gộp thành công Monorepo và push lên GitHub `dinhtuandev/EcoMart`.
 
 > Mục tiêu: dọn sạch sự rối trong trạng thái **3 thư mục tách biệt** (backend / frontend / database+docs)
 > đang phát triển song song. Việc gộp về 1 monorepo root **chưa thực hiện** — để dành cho giai đoạn
@@ -24,7 +23,7 @@
 
 | # | Vấn đề | Vị trí | Mức độ | Xử lý |
 |---|--------|--------|--------|-------|
-| P1 | Root **không phải git repo**; `ecomart-backend/.git`, `ecomart-frontend/.git` là 2 repo độc lập | root | 🔴 Nghiêm trọng | ⏸️ **Chưa xử lý** — giữ nguyên vì còn phát triển riêng; gộp sau |
+| P1 | Root **không phải git repo**; `ecomart-backend/.git`, `ecomart-frontend/.git` là 2 repo độc lập | root | 🔴 Nghiêm trọng | ✅ **Đã xử lý** — Gộp thành Monorepo duy nhất, giữ nguyên 100% lịch sử commit |
 | P2 | 2 file compose song song: `docker-compose.yml` (fullstack) vs `ecomart-backend/compose.yaml` (hardcode JWT secret) | root, backend | 🔴 Nghiêm trọng | ✅ GĐ1 |
 | P3 | `docker-compose.yml` trỏ `env_file: ./ecomart-backend/.env` — file **không tồn tại** | docker-compose.yml:39 | 🔴 Break | ✅ GĐ1 |
 | P4 | `.env.example` ở root chứa biến backend; frontend `.env` không được gitignore trong repo của nó | root, frontend | 🟡 Rối | ✅ GĐ1 |
