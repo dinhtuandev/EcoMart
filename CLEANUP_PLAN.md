@@ -12,6 +12,7 @@
 > 2. `ecomart-frontend/.env` ✅ Đã gỡ khỏi git tracking (chỉ còn trên local).
 > 3. Đã gộp thành công Monorepo và push lên GitHub `dinhtuandev/EcoMart`.
 > 4. ✅ Đã tích hợp các tính năng mới từ EcoMartX (OAuth2, Theme, Toast, CI/CD) vào Monorepo.
+> 5. ✅ Đã cập nhật `README.md` mới nhất cho Monorepo.
 
 > Mục tiêu: dọn sạch sự rối trong trạng thái **3 thư mục tách biệt** (backend / frontend / database+docs)
 > đang phát triển song song. Việc gộp về 1 monorepo root **chưa thực hiện** — để dành cho giai đoạn
