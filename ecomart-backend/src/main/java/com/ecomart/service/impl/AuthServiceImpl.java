@@ -41,6 +41,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
     private final EmailService emailService;
+    private final com.ecomart.service.SocialAuthService socialAuthService;
 
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final int MAX_FAILED_ATTEMPTS = 5;
@@ -396,6 +397,70 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    @Override
+    @Transactional
+    public AuthResponse socialLogin(SocialLoginRequest request) {
+        com.ecomart.dto.response.SocialUserInfo socialUserInfo = socialAuthService.verifyAndGetUserInfo(request.getProvider(), request.getToken());
+        String normalizedEmail = socialUserInfo.getEmail().trim().toLowerCase();
+
+        User user = userRepository.findByEmail(normalizedEmail).orElse(null);
+
+        if (user != null) {
+            if (!user.isActive()) {
+                throw new ForbiddenException("Tài khoản của bạn đã bị khóa hoặc tạm ngưng hoạt động.");
+            }
+            boolean updated = false;
+            if (user.getProviderId() == null && socialUserInfo.getProviderId() != null) {
+                user.setProviderId(socialUserInfo.getProviderId());
+                updated = true;
+            }
+            if (user.getAvatarUrl() == null && socialUserInfo.getAvatarUrl() != null) {
+                user.setAvatarUrl(socialUserInfo.getAvatarUrl());
+                updated = true;
+            }
+            if (!user.isEmailVerified()) {
+                user.setEmailVerified(true);
+                updated = true;
+            }
+            if (updated) {
+                userRepository.save(user);
+            }
+        } else {
+            Role customerRole = roleRepository.findByName("CUSTOMER")
+                    .orElseThrow(() -> new ResourceNotFoundException("Role CUSTOMER không tồn tại trên hệ thống."));
+
+            String fullName = socialUserInfo.getName();
+            if (fullName == null || fullName.isBlank()) {
+                fullName = normalizedEmail.split("@")[0];
+            }
+
+            user = User.builder()
+                    .fullName(fullName.trim())
+                    .email(normalizedEmail)
+                    .passwordHash(passwordEncoder.encode(UUID.randomUUID().toString()))
+                    .isActive(true)
+                    .isEmailVerified(true)
+                    .role(customerRole)
+                    .authProvider(request.getProvider())
+                    .providerId(socialUserInfo.getProviderId())
+                    .avatarUrl(socialUserInfo.getAvatarUrl())
+                    .build();
+
+            userRepository.save(user);
+        }
+
+        String accessToken = tokenProvider.generateToken(user.getEmail(), user.getId(), user.getRole().getName());
+        String refreshToken = tokenProvider.generateRefreshToken(user.getEmail(), user.getId(), user.getRole().getName());
+
+        return AuthResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType("Bearer")
+                .expiresIn(tokenProvider.getJwtExpirationMs())
+                .user(mapToUserResponse(user))
+                .build();
+    }
+
     private String generateOtpCode() {
         return String.format("%06d", RANDOM.nextInt(1_000_000));
     }
@@ -406,6 +471,7 @@ public class AuthServiceImpl implements AuthService {
                 .fullName(user.getFullName())
                 .email(user.getEmail())
                 .role(user.getRole().getName())
+                .avatarUrl(user.getAvatarUrl())
                 .phoneNumber(user.getPhoneNumber())
                 .isActive(user.isActive())
                 .isEmailVerified(user.isEmailVerified())

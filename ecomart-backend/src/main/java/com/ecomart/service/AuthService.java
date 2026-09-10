@@ -26,4 +26,6 @@ public interface AuthService {
     void resetPassword(ResetPasswordRequest request);
 
     UserResponse getCurrentUser(UserPrincipal principal);
+
+    AuthResponse socialLogin(SocialLoginRequest request);
 }

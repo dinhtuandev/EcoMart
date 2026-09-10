@@ -23,7 +23,7 @@ sequenceDiagram
     participant CTL as "REST Controller /api/v1"
     participant SVC as "Service (Business Logic)"
     participant DB as "PostgreSQL"
-    participant RES as "Resend API"
+    participant SMTP as "Gmail SMTP"
 
     G->>FE: Điền form đăng ký và gửi
     FE->>CTL: POST /auth/register {fullName, email, password, phoneNumber}
@@ -38,8 +38,8 @@ sequenceDiagram
         FE-->>G: Toast cảnh báo kèm đếm ngược
     else Thông tin hợp lệ
         SVC->>DB: Tạo User is_email_verified=false + EmailVerificationToken (OTP 6 số, hạn 5 phút)
-        SVC->>RES: Gửi email chứa mã OTP kích hoạt
-        RES-->>SVC: Gửi thành công
+        SVC->>SMTP: Gửi email chứa mã OTP kích hoạt
+        SMTP-->>SVC: Gửi thành công
         CTL-->>FE: 201 Đăng ký thành công
         FE-->>G: Mở Modal nhập OTP với đếm ngược 60 giây
 

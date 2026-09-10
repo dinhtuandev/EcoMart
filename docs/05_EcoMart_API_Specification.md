@@ -2,6 +2,8 @@
 
 ## 1. Mục đích và phạm vi
 
+> **Trạng thái tài liệu:** Đã đối chiếu controller, service API và frontend đang có trong source. Cập nhật lần cuối: 08/09/2026. Khi tài liệu và source khác nhau, source code cùng test là nguồn xác thực cuối cùng.
+
 Tài liệu mô tả hợp đồng API REST cho website thương mại điện tử EcoMart. API bao phủ toàn bộ chức năng đã xác định trong Business Analysis, gồm Guest, Customer và Admin. Hệ thống hỗ trợ thanh toán COD, VNPay (sandbox) và SePay.
 
 **Base URL:** `http://localhost:8081/api/v1` (local dev / Docker port 8081)
@@ -26,7 +28,8 @@ Authorization: Bearer <access_token>
 |---|---|
 | Guest | Các endpoint công khai và xác thực. |
 | Customer | API công khai, dữ liệu tài khoản của chính mình, giỏ hàng, đơn hàng và đánh giá đủ điều kiện. |
-| Admin | API quản trị. Admin không sử dụng API dành riêng cho Customer để thao tác dữ liệu của khách hàng khác. |
+| Manager | Các API vận hành: catalog, kho, đơn hàng, review, liên hệ, nội dung và báo cáo. |
+| Admin | Toàn bộ quyền của Manager, cùng API quản lý trạng thái tài khoản và cập nhật thông tin cửa hàng. |
 
 ### 2.2. Cấu trúc phản hồi thành công
 
@@ -198,10 +201,12 @@ Ví dụ phản hồi danh sách:
 
 | Method | Endpoint | Actor | Mô tả | Thành công |
 |---|---|---|---|---:|
-| POST | `/api/v1/auth/register` | Guest | Đăng ký tài khoản Customer mới (gửi OTP kích hoạt qua Resend API). | 201 |
+| GET | `/api/v1/auth/social-config` | Guest | Lấy Google Client ID/Facebook App ID công khai để khởi tạo SDK đăng nhập. | 200 |
+| POST | `/api/v1/auth/register` | Guest | Đăng ký tài khoản Customer mới (gửi OTP kích hoạt qua Gmail SMTP). | 201 |
 | POST | `/api/v1/auth/verify-email` | Guest | Xác thực mã OTP 6 chữ số để kích hoạt tài khoản. Trả về Access + Refresh Token. | 200 |
 | POST | `/api/v1/auth/resend-verification` | Guest | Gửi lại mã OTP kích hoạt email (Cooldown 60s, Rate Limit 5/15 phút). | 200 |
 | POST | `/api/v1/auth/login` | Guest | Đăng nhập bằng email/password. Yêu cầu `isEmailVerified = true` và `isActive = true`. | 200 |
+| POST | `/api/v1/auth/social-login` | Guest | Đăng nhập Google/Facebook bằng token do provider cấp. | 200 |
 | POST | `/api/v1/auth/refresh-token` | Customer, Admin | Cấp phát Access Token mới từ Refresh Token hợp lệ. | 200 |
 | POST | `/api/v1/auth/forgot-password` | Guest | Gửi mã OTP 6 chữ số đặt lại mật khẩu qua email. | 200 |
 | POST | `/api/v1/auth/reset-password-otp` | Guest | Đặt mật khẩu mới bằng email + mã OTP 6 chữ số. | 200 |
@@ -209,7 +214,22 @@ Ví dụ phản hồi danh sách:
 | GET | `/api/v1/auth/me` | Customer, Admin | Lấy thông tin profile của tài khoản hiện tại từ Bearer Token. | 200 |
 | POST | `/api/v1/auth/logout` | Customer, Admin | Đăng xuất phiên hiện tại. | 200 |
 
-### 4.1. Đăng ký
+### 4.1. Đăng nhập mạng xã hội
+
+`GET /api/v1/auth/social-config` trả về các mã định danh public cần cho frontend tải Google Identity Services hoặc Facebook SDK. Không trả về client secret.
+
+`POST /api/v1/auth/social-login`
+
+```json
+{
+  "provider": "GOOGLE",
+  "token": "id-token-or-access-token-from-provider"
+}
+```
+
+`provider` nhận `GOOGLE` hoặc `FACEBOOK`. Khi xác thực thành công, response có cùng cấu trúc `AuthResponse` như đăng nhập mật khẩu.
+
+### 4.2. Đăng ký
 
 `POST /api/v1/auth/register`
 
@@ -233,7 +253,7 @@ Ví dụ phản hồi danh sách:
 
 Quy tắc: email phải duy nhất → `409` nếu đã tồn tại. Tài khoản tạo ra ở trạng thái `is_email_verified = false`; chưa đăng nhập được cho đến khi xác thực OTP thành công.
 
-### 4.2. Xác thực Email OTP
+### 4.3. Xác thực Email OTP
 
 `POST /api/v1/auth/verify-email`
 
@@ -269,7 +289,7 @@ Quy tắc: email phải duy nhất → `409` nếu đã tồn tại. Tài khoả
 - Sai mã → tăng `failedAttempts`. Sai đến lần thứ 5 → token bị vô hiệu hóa → `400`.
 - OTP hết hạn → `400`. Yêu cầu gửi lại qua `/resend-verification`.
 
-### 4.3. Gửi lại OTP kích hoạt
+### 4.4. Gửi lại OTP kích hoạt
 
 `POST /api/v1/auth/resend-verification`
 
@@ -280,7 +300,7 @@ Quy tắc: email phải duy nhất → `409` nếu đã tồn tại. Tài khoả
 - Nếu gọi trước 60s từ lần gửi cuối → `429` với thông báo cooldown còn bao nhiêu giây.
 - Nếu vượt 5 lần trong 15 phút → `429`.
 
-### 4.4. Đăng nhập
+### 4.5. Đăng nhập
 
 `POST /api/v1/auth/login`
 
@@ -315,7 +335,7 @@ Quy tắc: email phải duy nhất → `409` nếu đã tồn tại. Tài khoả
 - Tài khoản chưa xác thực email (`is_email_verified = false`) → `401` kèm message hướng dẫn xác thực.
 - Tài khoản bị khóa (`is_active = false`) → `401`.
 
-### 4.5. Làm mới Access Token (Refresh Token)
+### 4.6. Làm mới Access Token (Refresh Token)
 
 `POST /api/v1/auth/refresh-token`
 
@@ -337,7 +357,7 @@ Quy tắc: email phải duy nhất → `409` nếu đã tồn tại. Tài khoả
 }
 ```
 
-### 4.6. Quên mật khẩu & Đặt lại mật khẩu
+### 4.7. Quên mật khẩu & Đặt lại mật khẩu
 
 **Bước 1 – Gửi OTP:**
 
@@ -374,7 +394,7 @@ Anti-spam tương tự `/resend-verification` (Cooldown 60s, Rate Limit 5/15 ph�
 
 OTP đặt lại mật khẩu có hiệu lực 15 phút, tối đa 5 lần nhập sai → token vô hiệu hóa.
 
-### 4.7. Lấy thông tin tài khoản hiện tại
+### 4.8. Lấy thông tin tài khoản hiện tại
 
 `GET /api/v1/auth/me`  *(yêu cầu `Authorization: Bearer <token>`)*
 
@@ -674,6 +694,7 @@ Hệ thống tự suy ra `productId` từ `orderItemId`. API trả về `422` n�
 | POST | `/payments/vnpay/ipn` | VNPay (server-to-server) | Nhận kết quả giao dịch từ VNPay. |
 | POST | `/payments/sepay/webhook` | SePay (server-to-server) | Nhận kết quả giao dịch từ SePay. |
 | GET | `/payments/vnpay/return` | Trình duyệt Customer (redirect) | VNPay chuyển hướng trình duyệt về đây; chỉ hiển thị, không xác nhận thanh toán. |
+| POST | `/payments/mock/success` | Development only | Giả lập một giao dịch thành công theo `orderId` hoặc `orderCode`; không dùng ở production. |
 
 Các endpoint này **không** dùng `Authorization: Bearer` như API thông thường — xác thực bằng chữ ký/checksum riêng của từng cổng:
 
@@ -693,9 +714,9 @@ Xử lý khi xác thực hợp lệ:
 
 Endpoint này chỉ redirect Frontend đến `/checkout/result?orderId=1002` (màn hình Payment Result) — không đọc bất kỳ tham số nào từ query string này để quyết định `paymentStatus`; Frontend phải tự gọi `GET /orders/{orderId}` để lấy trạng thái thật.
 
-## 7. Admin API
+## 7. Admin và Manager API
 
-> Tất cả endpoint trong mục này yêu cầu `Authorization: Bearer <token>` với role `ADMIN`.
+> Tất cả endpoint trong mục này yêu cầu `Authorization: Bearer <token>`. Các nhóm catalog, kho, đơn hàng, review, liên hệ, nội dung và báo cáo chấp nhận `ADMIN` hoặc `MANAGER`; chỉ `/admin/users/**` và `/admin/settings/**` yêu cầu `ADMIN`.
 
 ### 7.1. Dashboard và Quản lý người dùng
 
@@ -939,8 +960,6 @@ Chuyển `status` từ `NEW` sang `RESOLVED`, ghi nhận `resolvedAt`. Không c�
 
 | Method | Endpoint | Mô tả |
 |---|---|---|
-| GET | `/api/v1/admin/pages` | Danh sách 3 trang chính sách. |
-| GET | `/api/v1/admin/pages/{slug}` | Chi tiết một trang theo `slug`. |
 | PATCH | `/api/v1/admin/pages/{slug}` | Cập nhật tiêu đề/nội dung trang. |
 
 Payload:
@@ -958,7 +977,6 @@ Payload:
 
 | Method | Endpoint | Mô tả |
 |---|---|---|
-| GET | `/api/v1/admin/settings` | Lấy toàn bộ cấu hình cửa hàng. |
 | PATCH | `/api/v1/admin/settings` | Cập nhật một hoặc nhiều key cấu hình. |
 
 Payload:
@@ -972,7 +990,7 @@ Payload:
 }
 ```
 
-Chỉ gửi các key cần cập nhật; API upsert theo `settingKey`, không tạo bản ghi trùng key.
+Chỉ gửi các key cần cập nhật. Đọc cấu hình cửa hàng thực hiện qua endpoint công khai `GET /api/v1/settings`; controller admin hiện chỉ cung cấp thao tác `PATCH`.
 
 
 

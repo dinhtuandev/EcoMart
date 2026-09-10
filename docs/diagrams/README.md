@@ -29,7 +29,7 @@ Bộ sơ đồ hệ thống EcoMart được xây dựng từ tài liệu BA/doc
 ## Quy ước chung
 
 - **Actor**: `Guest`, `Customer`, `Admin` — đúng thuật ngữ BA.
-- **External systems**: `Resend API` (email OTP), `VNPay Sandbox` (IPN HMAC-SHA512), `SePay` (VietQR Napas 247 webhook), Google Maps chỉ là iframe embed hiển thị.
+- **External systems**: `Gmail SMTP` (email OTP), `VNPay Sandbox` (IPN HMAC-SHA512), `SePay` (VietQR Napas 247 webhook), Google Maps chỉ là iframe embed hiển thị.
 - **Trạng thái**: dùng cặp giá trị API + nhãn tiếng Việt (`PENDING` — Chờ xác nhận, …) theo quy ước API Spec §2.6.
 - **Backend layers** trong sequence diagram: Controller → Service → PostgreSQL (theo architecture rules 4 tầng; tầng Repository được thể hiện tập trung ở diagram Architecture).
 - Thông tin không được docs mô tả được ghi chú rõ `NOT SPECIFIED`, không tự suy diễn.
@@ -39,9 +39,8 @@ Bộ sơ đồ hệ thống EcoMart được xây dựng từ tài liệu BA/doc
 Không có Mermaid MCP trong môi trường; toàn bộ khối ```mermaid``` được xác thực bằng package `mermaid` chính thức:
 
 ```bash
-# chạy từ thư mục gốc dự án
-cd tools/diagram-validator && npm install   # lần đầu
-node validate.mjs ../../docs/diagrams
+cd mermaid && npm install   # lần đầu
+node validate.mjs ../docs/diagrams
 ```
 
 Kết quả kỳ vọng: mọi block in ra `PASS`.

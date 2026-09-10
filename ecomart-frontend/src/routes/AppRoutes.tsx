@@ -5,18 +5,19 @@ import MainLayout from '../components/layout/MainLayout';
 import AdminLayout from '../components/layout/AdminLayout';
 import ProtectedRoute from './ProtectedRoute';
 
-import HomePage from '../pages/HomePage';
+import HomePage from '../pages/customer/HomePage';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
 import ForgotPasswordPage from '../pages/ForgotPasswordPage';
-import ProductListPage from '../pages/ProductListPage';
+import ProductListPage from '../pages/customer/ProductListPage';
 import ProductDetailPage from '../pages/ProductDetailPage';
 import CartPage from '../pages/CartPage';
 import CheckoutPage from '../pages/CheckoutPage';
-import OrderHistoryPage from '../pages/OrderHistoryPage';
+import OrderHistoryPage from '../pages/customer/OrderHistoryPage';
 import OrderDetailPage from '../pages/OrderDetailPage';
-import ProfilePage from '../pages/ProfilePage';
-import ContactPage from '../pages/ContactPage';
+import ProfilePage from '../pages/customer/ProfilePage';
+import ContactPage from '../pages/customer/ContactPage';
+import PolicyPage from '../pages/customer/PolicyPage';
 import ContentPage from '../pages/ContentPage';
 import NotFoundPage from '../pages/NotFoundPage';
 
@@ -48,12 +49,13 @@ export const AppRoutes: React.FC = () => {
         <Route path="/products/:id" element={<ProductDetailPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/policy" element={<PolicyPage />} />
         <Route path="/pages/:slug" element={<ContentPage />} />
         <Route path="/payment/vnpay/return" element={<VNPayReturnPage />} />
         <Route path="/payment/vnpay/mock" element={<VNPayMockPage />} />
 
         {/* Customer Protected Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['CUSTOMER', 'ADMIN']} />}>
+        <Route element={<ProtectedRoute allowedRoles={['CUSTOMER', 'MANAGER', 'ADMIN']} />}>
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/orders" element={<OrderHistoryPage />} />
           <Route path="/orders/:id" element={<OrderDetailPage />} />
@@ -63,8 +65,8 @@ export const AppRoutes: React.FC = () => {
         <Route path="*" element={<NotFoundPage />} />
       </Route>
 
-      {/* Admin Protected Routes with Admin Layout */}
-      <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+      {/* Admin & Manager Protected Routes with Admin Layout */}
+      <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']} />}>
         <Route element={<AdminLayout />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/categories" element={<AdminCategoryPage />} />
@@ -75,9 +77,13 @@ export const AppRoutes: React.FC = () => {
           <Route path="/admin/orders" element={<AdminOrderPage />} />
           <Route path="/admin/orders/:id" element={<AdminOrderDetailPage />} />
           <Route path="/admin/reviews" element={<AdminReviewPage />} />
-          <Route path="/admin/users" element={<AdminUserPage />} />
           <Route path="/admin/content" element={<AdminContentPage />} />
-          <Route path="/admin/settings" element={<AdminSettingsPage />} />
+
+          {/* Admin Only System Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+            <Route path="/admin/users" element={<AdminUserPage />} />
+            <Route path="/admin/settings" element={<AdminSettingsPage />} />
+          </Route>
         </Route>
       </Route>
     </Routes>

@@ -180,7 +180,7 @@ export const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-xs transition-all">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Brand Logo EcoMart */}
         <Link
           to="/"
@@ -299,64 +299,6 @@ export const Header: React.FC = () => {
             Trang chủ
           </Link>
 
-          {/* Dropdown Danh Mục Sản Phẩm */}
-          <div className="relative" ref={categoryDropdownRef}>
-            <button
-              type="button"
-              onClick={() => setIsCategoryDropdownOpen((prev) => !prev)}
-              className="flex items-center gap-1.5 hover:text-emerald-600 transition-colors py-2"
-              aria-expanded={isCategoryDropdownOpen}
-              aria-haspopup="true"
-            >
-              <Layers className="w-4 h-4 text-emerald-600" />
-              <span>Danh mục</span>
-              <ChevronDown
-                className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                  isCategoryDropdownOpen ? 'rotate-180 text-emerald-600' : 'text-slate-400'
-                }`}
-              />
-            </button>
-
-            {/* Dropdown Content */}
-            {isCategoryDropdownOpen && (
-              <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in">
-                <div className="px-3 py-1.5 border-b border-gray-50 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                  Danh Mục Sinh Thái
-                </div>
-                {isLoadingCats ? (
-                  <div className="p-4 text-center text-xs text-slate-400">Đang tải...</div>
-                ) : categories.length === 0 ? (
-                  <div className="p-4 text-center text-xs text-slate-400">
-                    Chưa có danh mục nào.
-                  </div>
-                ) : (
-                  <div className="max-h-64 overflow-y-auto py-1">
-                    {categories.map((cat) => (
-                      <Link
-                        key={cat.id}
-                        to={`/products?category=${cat.id}`}
-                        onClick={() => setIsCategoryDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
-                      >
-                        <Leaf className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-                        <span className="truncate">{cat.name}</span>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-                <div className="p-2 border-t border-gray-50 bg-slate-50/50 rounded-b-2xl">
-                  <Link
-                    to="/products"
-                    onClick={() => setIsCategoryDropdownOpen(false)}
-                    className="block text-center text-xs font-bold text-emerald-600 hover:text-emerald-700 py-1"
-                  >
-                    Xem tất cả sản phẩm &rarr;
-                  </Link>
-                </div>
-              </div>
-            )}
-          </div>
-
           <Link to="/products" className="hover:text-emerald-600 transition-colors">
             Sản phẩm
           </Link>
@@ -367,7 +309,7 @@ export const Header: React.FC = () => {
               className="flex items-center gap-1.5 hover:text-emerald-600 transition-colors"
             >
               <Package className="w-4 h-4 text-emerald-600" />
-              <span>Đơn hàng</span>
+              <span>Đơn mua</span>
             </Link>
           )}
 
@@ -375,29 +317,20 @@ export const Header: React.FC = () => {
             Liên hệ
           </Link>
 
-          {isAdmin && (
-            <Link
-              to="/admin"
-              className="inline-flex items-center gap-1 text-amber-600 font-bold hover:text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg transition-colors text-xs"
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Admin Portal</span>
-            </Link>
-          )}
+          <Link to="/policy" className="hover:text-emerald-600 transition-colors">
+            Chính sách
+          </Link>
         </nav>
 
         {/* User Actions & Cart */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Quick Orders Link for Mobile & Desktop when Authenticated */}
-          {isAuthenticated && (
+          {(isAdmin || user?.role === 'MANAGER') && (
             <Link
-              to="/orders"
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-slate-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl text-xs font-bold transition-all"
-              title="Lịch sử đơn hàng của tôi"
-              aria-label="Lịch sử đơn hàng"
+              to="/admin"
+              className="inline-flex items-center gap-1.5 text-amber-700 font-bold hover:text-amber-800 bg-amber-50 hover:bg-amber-100/80 px-3 py-1.5 rounded-xl border border-amber-200/80 transition-all text-xs shadow-2xs"
             >
-              <Package className="w-4 h-4 text-emerald-600" />
-              <span className="hidden sm:inline">Đơn mua</span>
+              <ShieldCheck className="w-4 h-4 text-amber-600" />
+              <span>{isAdmin ? 'Admin Portal' : 'Manager Portal'}</span>
             </Link>
           )}
 
@@ -407,9 +340,9 @@ export const Header: React.FC = () => {
             className="relative p-2 text-slate-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
             aria-label="Giỏ hàng"
           >
-            <ShoppingCart className="w-5 h-5" />
+            <ShoppingCart className="w-5 h-5 text-emerald-600" />
             {totalQuantity > 0 && (
-              <span className="absolute -top-1 -right-1 bg-emerald-600 text-white text-[10px] font-black rounded-full min-w-[1.25rem] h-5 px-1 flex items-center justify-center shadow-md">
+              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-black rounded-full min-w-[1.25rem] h-5 px-1 flex items-center justify-center shadow-md ring-2 ring-white">
                 {totalQuantity > 99 ? '99+' : totalQuantity}
               </span>
             )}

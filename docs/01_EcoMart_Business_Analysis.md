@@ -22,7 +22,8 @@ Website hướng đến mô hình mua sắm trực tuyến: khách hàng tìm ki
 |---|---|
 | Guest | Xem trang chủ, danh mục, chi tiết sản phẩm; tìm kiếm và lọc sản phẩm (gồm lọc theo chứng nhận eco, điểm thân thiện môi trường); đăng ký, đăng nhập, quên mật khẩu; xem trang chính sách; gửi liên hệ/feedback. |
 | Customer | Quản lý hồ sơ, mật khẩu, địa chỉ giao hàng, giỏ hàng; đặt hàng và thanh toán COD hoặc online (VNPay/SePay); theo dõi, hủy đơn khi chưa xác nhận; xem lịch sử mua hàng; đánh giá sản phẩm đã mua; gửi liên hệ/feedback. |
-| Admin | Đăng nhập quản trị; xem dashboard; quản lý người dùng, danh mục, thương hiệu, chứng nhận, sản phẩm, tồn kho, đơn hàng, thanh toán, đánh giá, liên hệ khách hàng, nội dung trang chính sách, cấu hình cửa hàng; xem báo cáo doanh thu. |
+| Manager | Quản lý sản phẩm xanh, danh mục, thương hiệu, chứng nhận sinh thái; quản lý kho & tồn kho; xử lý đơn hàng & giao vận; kiểm duyệt đánh giá, phản hồi liên hệ; cập nhật thông tin cửa hàng (Hotline/Google Maps) và soạn thảo bài viết chính sách (đổi trả, bảo hành...); theo dõi 12 báo cáo doanh thu & tác động sinh thái. |
+| Admin | Quản lý danh sách tài khoản và khóa/mở khóa tài khoản; cập nhật thông tin công khai của cửa hàng (điện thoại, email, địa chỉ, Google Maps). Admin cũng có toàn bộ quyền vận hành của Manager. Source hiện chưa có API cấp role Manager, quản trị secrets hay vận hành backup/healthcheck. |
 
 ### 1.4. Ngoài phạm vi
 
@@ -40,7 +41,8 @@ Website hướng đến mô hình mua sắm trực tuyến: khách hàng tìm ki
 |---|---|
 | Khách vãng lai (Guest) | Tham khảo sản phẩm, tìm kiếm sản phẩm phù hợp và tạo tài khoản. |
 | Khách hàng (Customer) | Mua sản phẩm, quản lý thông tin nhận hàng, theo dõi đơn và đánh giá sản phẩm. |
-| Quản trị viên (Admin) | Cần công cụ quản lý dữ liệu sản phẩm, tồn kho, người dùng, đơn hàng và đánh giá. |
+| Quản lý vận hành (Manager) | Cần công cụ quản lý dữ liệu sản phẩm xanh, tồn kho, xử lý đơn hàng, nội dung chính sách, CSKH và theo dõi doanh thu. |
+| Quản trị viên (Admin) | Cần công cụ quản lý trạng thái tài khoản và thông tin công khai của cửa hàng; đồng thời có toàn quyền vận hành. |
 
 ### 1.6. Stakeholder
 
@@ -74,7 +76,8 @@ Website hướng đến mô hình mua sắm trực tuyến: khách hàng tìm ki
 |---|---|
 | Guest | Người truy cập website nhưng chưa đăng nhập. |
 | Customer | Người dùng đã đăng ký, đăng nhập và có quyền mua hàng. |
-| Admin | Người dùng có quyền quản trị hệ thống. |
+| Manager | Người dùng phụ trách quản lý hàng hóa sinh thái, kho bãi, xử lý đơn hàng, nội dung và kinh doanh. |
+| Admin | Người dùng có quyền quản trị kỹ thuật, tài khoản và an toàn hệ thống. |
 | Sản phẩm | Hàng hóa thân thiện với môi trường được đăng bán trên EcoMart. |
 | Danh mục | Nhóm phân loại sản phẩm, ví dụ: Đồ dùng nhà bếp, Túi vải, Mỹ phẩm hữu cơ. |
 | Thương hiệu | Đơn vị sản xuất hoặc nhãn hiệu của sản phẩm. |
@@ -242,7 +245,7 @@ Website hướng đến mô hình mua sắm trực tuyến: khách hàng tìm ki
 | FR-57 | Xử lý webhook/IPN thanh toán | Hệ thống nhận và xác thực chữ ký kết quả giao dịch từ cổng thanh toán, cập nhật trạng thái thanh toán của đơn hàng tương ứng. | Hệ thống |
 | FR-58 | Xem trạng thái thanh toán | Cho phép Customer xem trạng thái thanh toán của đơn hàng đang chờ xác nhận thanh toán online. | Customer |
 | FR-59 | Quản lý thanh toán đơn hàng | Cho phép Admin xem trạng thái thanh toán, lịch sử giao dịch của đơn hàng và cập nhật trạng thái đã hoàn tiền khi xử lý hoàn tiền thủ công. | Admin |
-| FR-60 | Xác thực tài khoản qua Email OTP | Hệ thống gửi mã OTP 6 chữ số qua Resend API khi Guest đăng ký; Customer bắt buộc xác thực OTP để kích hoạt tài khoản trước khi đăng nhập. | Hệ thống, Customer |
+| FR-60 | Xác thực tài khoản qua Email OTP | Hệ thống gửi mã OTP 6 chữ số qua Gmail SMTP khi Guest đăng ký; khi chưa cấu hình SMTP, môi trường dev ghi OTP vào log. Customer bắt buộc xác thực OTP để kích hoạt tài khoản trước khi đăng nhập. | Hệ thống, Customer |
 | FR-61 | Gửi lại mã OTP xác thực | Cho phép người dùng yêu cầu gửi lại mã OTP kích hoạt tài khoản qua email khi mã cũ hết hạn hoặc thất lạc. | Guest, Customer |
 | FR-62 | Đặt lại mật khẩu bằng OTP | Cho phép người dùng nhận mã OTP 6 số qua email và trực tiếp đổi mật khẩu mới bảo mật. | Guest, Customer |
 | FR-63 | Tự động làm mới phiên (Refresh Token) | Cho phép client gửi Refresh Token hợp lệ để nhận Access Token mới mà không bắt người dùng đăng nhập lại. | Hệ thống, Customer, Admin |

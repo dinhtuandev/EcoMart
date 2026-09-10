@@ -21,16 +21,22 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        Role customerRole = roleRepository.findByName("CUSTOMER")
+        Role customerRole = roleRepository.findByName(com.ecomart.entity.enums.RoleName.CUSTOMER.name())
                 .orElseGet(() -> roleRepository.save(Role.builder()
-                        .name("CUSTOMER")
+                        .name(com.ecomart.entity.enums.RoleName.CUSTOMER.name())
                         .description("Khách hàng của EcoMart")
                         .build()));
 
-        Role adminRole = roleRepository.findByName("ADMIN")
+        Role managerRole = roleRepository.findByName(com.ecomart.entity.enums.RoleName.MANAGER.name())
                 .orElseGet(() -> roleRepository.save(Role.builder()
-                        .name("ADMIN")
-                        .description("Quản trị viên EcoMart")
+                        .name(com.ecomart.entity.enums.RoleName.MANAGER.name())
+                        .description("Quản lý vận hành và kinh doanh EcoMart")
+                        .build()));
+
+        Role adminRole = roleRepository.findByName(com.ecomart.entity.enums.RoleName.ADMIN.name())
+                .orElseGet(() -> roleRepository.save(Role.builder()
+                        .name(com.ecomart.entity.enums.RoleName.ADMIN.name())
+                        .description("Quản trị viên hệ thống EcoMart")
                         .build()));
 
         if (!userRepository.existsByEmail("admin@ecomart.com")) {
@@ -46,6 +52,36 @@ public class DataSeeder implements CommandLineRunner {
 
             userRepository.save(admin);
             log.info("Khởi tạo tài khoản Admin mặc định thành công: admin@ecomart.com");
+        }
+
+        if (!userRepository.existsByEmail("manager@ecomart.com")) {
+            User manager = User.builder()
+                    .fullName("Manager EcoMart")
+                    .email("manager@ecomart.com")
+                    .passwordHash(passwordEncoder.encode("Manager123!"))
+                    .phoneNumber("0911111111")
+                    .isActive(true)
+                    .isEmailVerified(true)
+                    .role(managerRole)
+                    .build();
+
+            userRepository.save(manager);
+            log.info("Khởi tạo tài khoản Manager mặc định thành công: manager@ecomart.com");
+        }
+
+        if (!userRepository.existsByEmail("customer@ecomart.com")) {
+            User customer = User.builder()
+                    .fullName("Khách Hàng EcoMart")
+                    .email("customer@ecomart.com")
+                    .passwordHash(passwordEncoder.encode("Customer123!"))
+                    .phoneNumber("0922222222")
+                    .isActive(true)
+                    .isEmailVerified(true)
+                    .role(customerRole)
+                    .build();
+
+            userRepository.save(customer);
+            log.info("Khởi tạo tài khoản Customer mặc định thành công: customer@ecomart.com");
         }
     }
 }

@@ -28,9 +28,14 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void initRoles() {
-        if (roleRepository.count() == 0) {
-            roleRepository.save(Role.builder().name("ADMIN").description("Quản trị viên hệ thống").build());
-            roleRepository.save(Role.builder().name("CUSTOMER").description("Khách hàng mua sắm").build());
+        if (!roleRepository.existsByName(com.ecomart.entity.enums.RoleName.ADMIN.name())) {
+            roleRepository.save(Role.builder().name(com.ecomart.entity.enums.RoleName.ADMIN.name()).description("Quản trị viên hệ thống").build());
+        }
+        if (!roleRepository.existsByName(com.ecomart.entity.enums.RoleName.MANAGER.name())) {
+            roleRepository.save(Role.builder().name(com.ecomart.entity.enums.RoleName.MANAGER.name()).description("Quản lý vận hành và kinh doanh").build());
+        }
+        if (!roleRepository.existsByName(com.ecomart.entity.enums.RoleName.CUSTOMER.name())) {
+            roleRepository.save(Role.builder().name(com.ecomart.entity.enums.RoleName.CUSTOMER.name()).description("Khách hàng mua sắm").build());
         }
     }
 

@@ -1,23 +1,33 @@
 package com.ecomart.service.impl;
 
 import com.ecomart.service.EmailService;
-import com.resend.Resend;
-import com.resend.services.emails.model.CreateEmailOptions;
-import com.resend.services.emails.model.CreateEmailResponse;
-import lombok.extern.slf4j.Slf4j;
+import jakarta.mail.internet.MimeMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
+
 @Service
-@Slf4j
 public class EmailServiceImpl implements EmailService {
 
-    @Value("${resend.api-key:}")
-    private String resendApiKey;
+    private static final Logger log = LoggerFactory.getLogger(EmailServiceImpl.class);
 
-    @Value("${resend.from-email:onboarding@resend.dev}")
-    private String fromEmail;
+    private final JavaMailSender mailSender;
+
+    @Value("${spring.mail.username:}")
+    private String mailUsername;
+
+    @Value("${spring.mail.password:}")
+    private String mailPassword;
+
+    public EmailServiceImpl(JavaMailSender mailSender) {
+        this.mailSender = mailSender;
+    }
 
     @Async
     @Override
@@ -31,7 +41,7 @@ public class EmailServiceImpl implements EmailService {
                 "Mã này có hiệu lực trong vòng 5 phút. Vui lòng không chia sẻ mã này cho bất kỳ ai."
         );
 
-        sendEmailViaResend(toEmail, subject, htmlContent, otpCode, "VERIFICATION");
+        sendEmailViaSmtp(toEmail, subject, htmlContent, otpCode, "VERIFICATION");
     }
 
     @Async
@@ -46,34 +56,35 @@ public class EmailServiceImpl implements EmailService {
                 "Mã này có hiệu lực trong vòng 15 phút. Nếu bạn không gửi yêu cầu này, vui lòng bỏ qua email."
         );
 
-        sendEmailViaResend(toEmail, subject, htmlContent, otpCode, "PASSWORD_RESET");
+        sendEmailViaSmtp(toEmail, subject, htmlContent, otpCode, "PASSWORD_RESET");
     }
 
-    private void sendEmailViaResend(String toEmail, String subject, String htmlContent, String otpCode, String type) {
-        if (resendApiKey == null || resendApiKey.isBlank() || resendApiKey.startsWith("re_xxxx")) {
-            log.info("========== [RESEND SIMULATION] ==========");
+    private void sendEmailViaSmtp(String toEmail, String subject, String htmlContent, String otpCode, String type) {
+        // Dev fallback: Nếu chưa cấu hình MAIL_USERNAME hoặc MAIL_PASSWORD, log OTP ra console để dev test tiện lợi
+        if (mailUsername == null || mailUsername.isBlank() || mailPassword == null || mailPassword.isBlank()) {
+            log.info("========== [GMAIL SMTP SIMULATION] ==========");
             log.info("Type: {}", type);
             log.info("To: {}", toEmail);
             log.info("Subject: {}", subject);
             log.info("OTP Code: {}", otpCode);
-            log.info("=========================================");
+            log.info("Lưu ý: Điền MAIL_USERNAME và MAIL_PASSWORD (Google App Password) trong .env để gửi email thật.");
+            log.info("=============================================");
             return;
         }
 
         try {
-            Resend resend = new Resend(resendApiKey);
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
 
-            CreateEmailOptions params = CreateEmailOptions.builder()
-                    .from(fromEmail)
-                    .to(toEmail)
-                    .subject(subject)
-                    .html(htmlContent)
-                    .build();
+            helper.setFrom(mailUsername, "EcoMart");
+            helper.setTo(toEmail);
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true);
 
-            CreateEmailResponse response = resend.emails().send(params);
-            log.info("Đã gửi email thành công qua Resend tới {} (Email ID: {})", toEmail, response != null ? response.getId() : "N/A");
+            mailSender.send(message);
+            log.info("Đã gửi email thành công qua Gmail SMTP tới {}", toEmail);
         } catch (Exception e) {
-            log.warn("Không thể gửi email thực tế qua Resend tới {} (Lỗi: {}). Sử dụng chế độ DEV fallback. OTP: {}",
+            log.warn("Không thể gửi email thực tế qua Gmail SMTP tới {} (Lỗi: {}). Sử dụng chế độ DEV fallback. OTP: {}",
                     toEmail, e.getMessage(), otpCode);
         }
     }

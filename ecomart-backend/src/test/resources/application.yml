@@ -10,9 +10,11 @@ spring:
     show-sql: false
     database-platform: org.hibernate.dialect.H2Dialect
 
-resend:
-  api-key: test-resend-api-key
-  from-email: EcoMart <test@resend.dev>
+  mail:
+    host: localhost
+    port: 25
+    username: test@example.com
+    password: testpassword
 
 app:
   jwt:
@@ -30,3 +32,10 @@ app:
       account-number: 0123456789
       bank: MBBank
       qr-url-template: https://qr.sepay.vn/img?acc={acc}&bank={bank}&amount={amount}&des={des}
+  oauth2:
+    google:
+      client-id: test-google-client-id
+      client-secret: test-google-client-secret
+    facebook:
+      client-id: test-facebook-client-id
+      client-secret: test-facebook-client-secret

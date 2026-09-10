@@ -44,6 +44,17 @@ public class User {
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "auth_provider", nullable = false, length = 20)
+    @Builder.Default
+    private com.ecomart.entity.enums.AuthProvider authProvider = com.ecomart.entity.enums.AuthProvider.LOCAL;
+
+    @Column(name = "provider_id", length = 100)
+    private String providerId;
+
+    @Column(name = "avatar_url", length = 500)
+    private String avatarUrl;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

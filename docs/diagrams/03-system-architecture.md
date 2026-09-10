@@ -6,7 +6,7 @@ Mô tả kiến trúc logic của EcoMart theo đúng những gì tài liệu m�
 
 ## Source
 
-- README Tech Stack (Spring Boot 3.3.x, Java 17, Spring Security 6 stateless JWT, Spring Data JPA/Hibernate, PostgreSQL 15, React 18 + Vite + TS + TailwindCSS, Axios, Context API, Resend API, VNPay Sandbox HMAC-SHA512 IPN, SePay VietQR Napas 247, Docker Compose)
+- README Tech Stack (Spring Boot 3.3.x, Java 17, Spring Security 6 stateless JWT, Spring Data JPA/Hibernate, PostgreSQL 16, React 18 + Vite + TS + TailwindCSS, Axios, Context API, Gmail SMTP, VNPay Sandbox HMAC-SHA512 IPN, SePay VietQR Napas 247, Docker Compose)
 - CLAUDE.md (Monolithic 3-Tier; NO microservices/DDD/CQRS)
 - architecture/backend_rules.md + project_context.md (4 tầng Controller → Service → Repository)
 - API Specification §1–§2 (Base URL :8081, `/api/v1`, Bearer JWT, Swagger UI)
@@ -23,7 +23,7 @@ flowchart TB
 
     subgraph SERVER["Tier 2 — Backend Monolith (Spring Boot 3.3 · Java 17) :8081"]
         direction TB
-        SEC["Spring Security 6<br/>Stateless JWT · Phân quyền CUSTOMER / ADMIN"]
+        SEC["Spring Security 6<br/>Stateless JWT · CUSTOMER / MANAGER / ADMIN"]
         CTL["REST Controllers — /api/v1/**"]
         SVC["Business Services<br/>(nghiệp vụ trong @Transactional)"]
         REPO["Spring Data JPA Repositories<br/>(Hibernate, ddl-auto: update ở dev)"]
@@ -31,18 +31,18 @@ flowchart TB
         SEC --> CTL --> SVC --> REPO
     end
 
-    DB[("PostgreSQL 15 :5432<br/>21 bảng dữ liệu")]
+    DB[("PostgreSQL 16 :5432<br/>21 bảng dữ liệu")]
 
     subgraph EXT["Dịch vụ bên ngoài"]
         direction LR
-        RESEND["Resend API<br/>(Email OTP)"]
+        SMTP["Gmail SMTP<br/>(Email OTP)"]
         VNPAY["VNPay Sandbox<br/>(Payment URL + IPN)"]
         SEPAY["SePay<br/>(VietQR Napas 247 + Webhook)"]
     end
 
     SPA -->|"REST JSON + Bearer JWT<br/>Axios base URL :8081/api/v1"| SEC
     REPO -->|"JDBC"| DB
-    SVC -.->|"Gửi OTP email"| RESEND
+    SVC -.->|"Gửi OTP email"| SMTP
     SVC -->|"Tạo paymentUrl có chữ ký"| VNPAY
     VNPAY -->|"IPN POST /payments/vnpay/ipn<br/>(server-to-server)"| SEC
     SEPAY -->|"Webhook POST /payments/sepay/webhook<br/>(server-to-server)"| SEC

@@ -575,7 +575,7 @@ Phạm vi là bố cục, thành phần, luồng thao tác, dữ liệu, validat
 
 | Thành phần | Chức năng | Dữ liệu/API |
 |---|---|---|
-| Danh sách trang | 3 dòng cố định: đổi trả, bảo hành, vận chuyển. | `GET /admin/pages` |
+| Danh sách trang | 3 dòng cố định: đổi trả, bảo hành, vận chuyển. | `GET /pages` (public) |
 | Editor nội dung | Sửa tiêu đề và nội dung (rich text/markdown) theo `slug`. | `PATCH /admin/pages/{slug}` |
 | Xem trước | Xem nội dung sẽ hiển thị cho Guest/Customer trước khi lưu. | Cục bộ. |
 
@@ -593,7 +593,7 @@ Phạm vi là bố cục, thành phần, luồng thao tác, dữ liệu, validat
 
 | Thành phần | Chức năng | Dữ liệu/API |
 |---|---|---|
-| Form cấu hình | SĐT, email, địa chỉ, đường dẫn nhúng Google Maps (`mapEmbedUrl`). | `GET /admin/settings`, `PATCH /admin/settings` |
+| Form cấu hình | SĐT, email, địa chỉ, đường dẫn nhúng Google Maps (`mapEmbedUrl`). | `GET /settings` (public), `PATCH /admin/settings` |
 | Xem trước bản đồ | Hiển thị iframe theo `mapEmbedUrl` đã nhập để kiểm tra trước khi lưu. | Cục bộ. |
 
 **Luồng thao tác:** Tải cấu hình hiện tại → chỉnh sửa → xem trước bản đồ → lưu.

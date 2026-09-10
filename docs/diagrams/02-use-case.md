@@ -162,7 +162,7 @@ flowchart LR
 
 ## Ghi chú nghiệp vụ (từ BA/docs)
 
-- `Đăng ký tài khoản` kích hoạt OTP 6 số qua Resend API; tài khoản chưa kích hoạt (`is_email_verified = false`) không đăng nhập được cho đến khi hoàn tất `Xác thực email qua mã OTP`.
+- `Đăng ký tài khoản` kích hoạt OTP 6 số qua Gmail SMTP; tài khoản chưa kích hoạt (`is_email_verified = false`) không đăng nhập được cho đến khi hoàn tất `Xác thực email qua mã OTP`.
 - `Đặt hàng` include kiểm tra tồn kho, chọn địa chỉ, lưu chi tiết đơn và giảm tồn kho; nếu chọn thanh toán online thì khởi tạo thêm giao dịch thanh toán và mở cổng (VNPay redirect hoặc modal VietQR).
 - Customer chỉ hủy được đơn ở trạng thái **Chờ xác nhận** (`PENDING`) — BR-21.
 - Admin xác nhận đơn online chỉ khi trạng thái thanh toán là **Đã thanh toán** (`PAID`) — BR-22.

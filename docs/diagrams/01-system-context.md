@@ -27,7 +27,7 @@ flowchart TB
 
     subgraph EXT["Hệ thống bên ngoài"]
         direction LR
-        RESEND["Resend API<br/>(Gửi email OTP)"]
+        SMTP["Gmail SMTP<br/>(Gửi email OTP)"]
         VNPAY["VNPay Sandbox<br/>(Cổng thanh toán online)"]
         SEPAY["SePay — VietQR Napas 247<br/>(Webhook giao dịch)"]
         GMAPS["Google Maps Embed<br/>(iframe hiển thị)"]
@@ -41,7 +41,7 @@ flowchart TB
     VNPAY -->|"IPN server-to-server<br/>xác thực chữ ký HMAC-SHA512"| WEB
     WEB -->|"Tạo URL VietQR theo đơn hàng<br/>(img.vietqr.io)"| SEPAY
     SEPAY -->|"Webhook POST /payments/sepay/webhook<br/>xác thực API Key"| WEB
-    WEB -->|"Gửi mã OTP 6 số qua email"| RESEND
+    WEB -->|"Gửi mã OTP 6 số qua email"| SMTP
     WEB -.->|"Nhúng iframe mapEmbedUrl<br/>(chỉ hiển thị, không tích hợp backend)"| GMAPS
 ```
 

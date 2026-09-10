@@ -43,6 +43,9 @@ class AuthControllerTest {
     @MockBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    @MockBean
+    private com.ecomart.service.SocialAuthService socialAuthService;
+
     private AuthResponse authResponse;
     private UserResponse userResponse;
 

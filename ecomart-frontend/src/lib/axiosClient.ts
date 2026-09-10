@@ -33,6 +33,13 @@ const processQueue = (
 };
 
 /**
+ * Bắn Toast qua custom event — ToastContext.tsx sẽ lắng nghe sự kiện "app:toast" này
+ */
+const emitToast = (type: 'error' | 'warning' | 'info' | 'success', message: string): void => {
+  window.dispatchEvent(new CustomEvent('app:toast', { detail: { type, message } }));
+};
+
+/**
  * Instance Axios được cấu hình Type-safe cho toàn bộ ứng dụng EcoMart
  */
 const axiosClient: AxiosInstance = axios.create({
@@ -41,6 +48,7 @@ const axiosClient: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 15000, // tránh request treo vô thời hạn khi mạng chậm/backend đứng
 });
 
 /**
@@ -58,7 +66,8 @@ axiosClient.interceptors.request.use(
 );
 
 /**
- * Response Interceptor: Xử lý dữ liệu trả về và hàng đợi Silent Refresh Token khi nhận lỗi 401
+ * Response Interceptor: Xử lý dữ liệu trả về, hàng đợi Silent Refresh Token khi 401,
+ * cảnh báo Rate Limit khi 429, và Toast lỗi chuẩn cho các trường hợp còn lại
  */
 axiosClient.interceptors.response.use(
   (response: AxiosResponse) => response.data,
@@ -69,6 +78,19 @@ axiosClient.interceptors.response.use(
       | undefined;
 
     if (!originalRequest) {
+      return Promise.reject(customError);
+    }
+
+    // ---- 429: Rate Limit / Cooldown ----
+    if (customError.response?.status === 429) {
+      const retryAfter = customError.response.headers?.['retry-after'];
+      const seconds = retryAfter ? Number(retryAfter) : null;
+      emitToast(
+        'warning',
+        seconds
+          ? `Bạn thao tác quá nhanh, vui lòng thử lại sau ${seconds} giây.`
+          : 'Bạn thao tác quá nhanh, vui lòng thử lại sau ít phút.'
+      );
       return Promise.reject(customError);
     }
 
@@ -144,6 +166,12 @@ axiosClient.interceptors.response.use(
         isRefreshing = false;
       }
     }
+
+    // ---- Toast lỗi chuẩn cho các trường hợp còn lại (400, 403, 404, 500...) ----
+    const message =
+      (customError.response?.data as { message?: string } | undefined)?.message ||
+      'Đã có lỗi xảy ra, vui lòng thử lại.';
+    emitToast('error', message);
 
     return Promise.reject(customError);
   }

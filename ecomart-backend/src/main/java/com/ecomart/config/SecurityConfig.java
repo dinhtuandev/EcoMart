@@ -68,7 +68,24 @@ public class SecurityConfig {
                         // Actuator health probe (Render health check + UptimeRobot keep-alive)
                         .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
 
-                        // Admin Endpoints
+                        // Admin Only Endpoints (User Management, Sensitive System & Payment Settings)
+                        .requestMatchers("/api/v1/admin/users/**", "/api/v1/admin/settings/**").hasRole("ADMIN")
+
+                        // Operations Endpoints (Accessible by both ADMIN and MANAGER)
+                        .requestMatchers(
+                                "/api/v1/admin/products/**",
+                                "/api/v1/admin/categories/**",
+                                "/api/v1/admin/brands/**",
+                                "/api/v1/admin/certifications/**",
+                                "/api/v1/admin/inventory/**",
+                                "/api/v1/admin/orders/**",
+                                "/api/v1/admin/reviews/**",
+                                "/api/v1/admin/contact-messages/**",
+                                "/api/v1/admin/pages/**",
+                                "/api/v1/admin/reports/**"
+                        ).hasAnyRole("ADMIN", "MANAGER")
+
+                        // Default Admin Endpoints
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 
                         // Customer / Authenticated Endpoints

@@ -4,6 +4,7 @@ import com.ecomart.dto.request.*;
 import com.ecomart.dto.response.*;
 import com.ecomart.security.UserPrincipal;
 import com.ecomart.service.AuthService;
+import com.ecomart.service.SocialAuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,13 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final SocialAuthService socialAuthService;
+
+    @GetMapping("/social-config")
+    public ResponseEntity<ApiResponse<SocialConfigResponse>> getSocialConfig() {
+        SocialConfigResponse response = socialAuthService.getSocialConfig();
+        return ResponseEntity.ok(ApiResponse.success("Lấy cấu hình đăng nhập mạng xã hội thành công.", response));
+    }
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegisterResponse>> register(@Valid @RequestBody RegisterRequest request) {
@@ -41,6 +49,12 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
         return ResponseEntity.ok(ApiResponse.success("Đăng nhập thành công.", response));
+    }
+
+    @PostMapping("/social-login")
+    public ResponseEntity<ApiResponse<AuthResponse>> socialLogin(@Valid @RequestBody SocialLoginRequest request) {
+        AuthResponse response = authService.socialLogin(request);
+        return ResponseEntity.ok(ApiResponse.success("Đăng nhập bằng mạng xã hội thành công.", response));
     }
 
     @PostMapping("/refresh-token")

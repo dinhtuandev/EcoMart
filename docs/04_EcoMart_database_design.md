@@ -50,7 +50,7 @@ spring:
 |---|---|---|---|
 | 1 | `roles` | 3 | Vai trò hệ thống: `CUSTOMER`, `ADMIN`. |
 | 2 | `users` | 10 | Tài khoản người dùng. Có `is_email_verified` (OTP email). |
-| 3 | `email_verification_tokens` | 7 | OTP 6 số kích hoạt tài khoản (Resend API). Hạn 5 phút, max 5 lần sai. |
+| 3 | `email_verification_tokens` | 7 | OTP 6 số kích hoạt tài khoản (Gmail SMTP). Hạn 5 phút, max 5 lần sai. |
 | 4 | `password_reset_tokens` | 7 | OTP/Token đặt lại mật khẩu. Hạn 15 phút, max 5 lần sai. |
 | 5 | `addresses` | 10 | Sổ địa chỉ giao hàng. Có `is_default`. |
 | 6 | `categories` | 6 | Danh mục sản phẩm. Có `is_active` để ẩn/hiện. |

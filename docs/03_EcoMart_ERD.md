@@ -268,7 +268,7 @@ erDiagram
 |---|---|---|---|---|
 | 1 | `roles` | `id` | Không | Định nghĩa vai trò tài khoản (`CUSTOMER`, `ADMIN`). |
 | 2 | `users` | `id` | `role_id` $\to$ `roles(id)` | Tài khoản khách hàng & quản trị viên. |
-| 3 | `email_verification_tokens` | `id` | Không | Mã OTP 6 số kích hoạt tài khoản qua email (Resend API). |
+| 3 | `email_verification_tokens` | `id` | Không | Mã OTP 6 số kích hoạt tài khoản qua email (Gmail SMTP). |
 | 4 | `password_reset_tokens` | `id` | `user_id` $\to$ `users(id)` | Mã OTP/Token đặt lại mật khẩu. |
 | 5 | `addresses` | `id` | `user_id` $\to$ `users(id)` | Sổ địa chỉ giao hàng của khách hàng. |
 | 6 | `categories` | `id` | Không | Danh mục sản phẩm thân thiện môi trường. |

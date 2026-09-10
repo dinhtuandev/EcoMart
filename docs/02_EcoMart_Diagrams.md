@@ -7,7 +7,7 @@
 - Trạng thái đơn hàng: **Chờ xác nhận** (`PENDING`), **Đã xác nhận** (`CONFIRMED`), **Đã hoàn thành** (`COMPLETED`), **Đã hủy** (`CANCELLED`).
 - Trạng thái thanh toán (độc lập với trạng thái đơn hàng): **Chưa thanh toán** (`UNPAID`), **Đã thanh toán** (`PAID`), **Thất bại** (`FAILED`), **Đã hoàn tiền** (`REFUNDED`).
 - Hệ thống hỗ trợ thanh toán COD, VNPay (sandbox) và SePay (VietQR Napas 247).
-- Xác thực tài khoản hỗ trợ bảo mật OTP 6 số qua email (Resend API), Cooldown 60s, Rate Limiting 5 lần / 15 phút, Anti-Brute-Force tối đa 5 lần thử sai.
+- Xác thực tài khoản hỗ trợ bảo mật OTP 6 số qua Gmail SMTP, Cooldown 60s, Rate Limiting 5 lần / 15 phút, Anti-Brute-Force tối đa 5 lần thử sai. Khi chưa cấu hình SMTP, môi trường dev ghi OTP vào log.
 
 ## 2. Use Case Diagram
 
@@ -141,7 +141,7 @@ flowchart LR
 
 ### 2.1. Ghi chú Use Case
 
-- `Đăng ký tài khoản` kích hoạt luồng gửi mã OTP 6 chữ số qua Resend API; tài khoản ở trạng thái chưa kích hoạt (`is_email_verified = false`) cho đến khi hoàn tất `Xác thực email qua mã OTP`.
+- `Đăng ký tài khoản` kích hoạt luồng gửi mã OTP 6 chữ số qua Gmail SMTP; tài khoản ở trạng thái chưa kích hoạt (`is_email_verified = false`) cho đến khi hoàn tất `Xác thực email qua mã OTP`.
 - `Đặt hàng` bao gồm kiểm tra tồn kho, chọn địa chỉ giao hàng, lưu chi tiết đơn hàng và giảm tồn kho; nếu Customer chọn thanh toán online (VNPay/SePay) thì bao gồm thêm bước khởi tạo thanh toán và mở cổng thanh toán (VNPay redirect hoặc modal VietQR).
 - `Thử lại thanh toán online` cho phép Customer tạo lại phiên thanh toán mới cho đơn hàng `PENDING` chưa thanh toán.
 - `Quản lý đơn hàng` của Admin bao gồm xác nhận, hủy hoặc hoàn thành đơn theo trạng thái hợp lệ; đơn thanh toán online chỉ xác nhận được khi trạng thái thanh toán là Đã thanh toán (`PAID`).
@@ -167,7 +167,7 @@ flowchart TD
 
     CheckSpam -- Hợp lệ --> CreateUser[Tạo User trạng thái chưa xác thực email: isEmailVerified = false]
     CreateUser --> GenOTP[Sinh mã OTP 6 chữ số ngẫu nhiên, hiệu lực 5 phút]
-    GenOTP --> SendMail[Gửi email chứa mã OTP kích hoạt qua Resend API]
+    GenOTP --> SendMail[Gửi email chứa mã OTP kích hoạt qua Gmail SMTP]
     SendMail --> OpenModal[Frontend mở Modal nhập mã OTP xác thực]
 
     OpenModal --> InputOTP[Người dùng nhập mã OTP 6 số]

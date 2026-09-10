@@ -1,34 +1,44 @@
 package com.ecomart;
 
-import com.resend.Resend;
-import com.resend.services.emails.model.CreateEmailOptions;
-import com.resend.services.emails.model.CreateEmailResponse;
+import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.mail.javamail.MimeMessageHelper;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 
 public class ResendIntegrationTest {
 
     @Test
-    @Disabled("Chạy thủ công để kiểm tra gửi email thực tế qua Resend khi đã set RESEND_API_KEY")
+    @Disabled("Chạy thủ công để kiểm tra gửi email thực tế qua Gmail SMTP khi đã set MAIL_USERNAME & MAIL_PASSWORD")
     void sendTestEmail() throws Exception {
-        String apiKey = System.getenv("RESEND_API_KEY");
-        if (apiKey == null || apiKey.isBlank()) {
+        String username = System.getenv("MAIL_USERNAME");
+        String password = System.getenv("MAIL_PASSWORD");
+        if (username == null || username.isBlank() || password == null || password.isBlank()) {
             return;
         }
 
-        Resend resend = new Resend(apiKey);
+        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+        mailSender.setHost("smtp.gmail.com");
+        mailSender.setPort(587);
+        mailSender.setUsername(username);
+        mailSender.setPassword(password);
 
-        CreateEmailOptions sendEmailRequest = CreateEmailOptions.builder()
-                .from("onboarding@resend.dev")
-                .to("trandinhtuan0219@gmail.com")
-                .subject("[EcoMart] Xin chào từ Sàn Thương Mại Điện Tử EcoMart!")
-                .html("<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f0fdf4; border-radius: 8px;\">"
-                        + "<h2 style=\"color: #16a34a;\">🌿 Chào mừng bạn đến với EcoMart!</h2>"
-                        + "<p>Tích hợp Resend API thành công.</p>"
-                        + "</div>")
-                .build();
+        Properties props = mailSender.getJavaMailProperties();
+        props.put("mail.transport.protocol", "smtp");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
 
-        CreateEmailResponse data = resend.emails().send(sendEmailRequest);
-        System.out.println(">>> [RESEND SUCCESS] Email sent successfully! ID: " + data.getId());
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
+        helper.setFrom(username, "EcoMart");
+        helper.setTo(username);
+        helper.setSubject("[EcoMart] Test Gmail SMTP Integration");
+        helper.setText("<h3>Gửi thử email qua Gmail SMTP thành công!</h3>", true);
+
+        mailSender.send(message);
+        System.out.println(">>> [GMAIL SMTP SUCCESS] Email sent successfully!");
     }
 }

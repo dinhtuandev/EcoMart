@@ -117,156 +117,227 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full bg-white border border-gray-100 rounded-3xl p-8 shadow-xl space-y-6">
-        {/* Header Branding */}
-        <div className="text-center space-y-2">
-          <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
-            <Leaf className="w-7 h-7" />
+    <div className="min-h-[85vh] flex items-center justify-center py-6 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl w-full bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col lg:flex-row min-h-[620px]">
+        {/* Left Side Banner (Desktop Only) */}
+        <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-emerald-950 via-emerald-900 to-emerald-800 p-10 text-white flex-col justify-between overflow-hidden">
+          <img
+            src="https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&q=80&w=1000"
+            alt="EcoMart Community"
+            className="absolute inset-0 w-full h-full object-cover opacity-25 mix-blend-overlay"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/90 via-emerald-900/40 to-transparent" />
+
+          {/* Top Logo & Tag */}
+          <div className="relative z-10 space-y-3">
+            <Link to="/" className="inline-flex items-center gap-2">
+              <div className="w-10 h-10 bg-emerald-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-emerald-900/50">
+                <Leaf className="w-6 h-6" />
+              </div>
+              <span className="text-2xl font-black tracking-tight text-white">
+                Eco<span className="text-emerald-400">Mart</span>
+              </span>
+            </Link>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-800/80 text-emerald-200 text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-emerald-700/60">
+              🌱 Gia Nhập Cộng Đồng Sống Xanh
+            </div>
           </div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-            Tạo Tài Khoản EcoMart
-          </h1>
-          <p className="text-xs text-slate-500">
-            Tham gia cộng đồng tiêu dùng xanh và nhận ưu đãi bền vững
-          </p>
+
+          {/* Middle Quote & Badges */}
+          <div className="relative z-10 space-y-6 my-auto">
+            <div className="space-y-3">
+              <h2 className="text-3xl font-black leading-tight text-white">
+                Bắt Đầu Hành Trình <br />
+                <span className="text-emerald-400">Tiêu Dùng Sinh Thái</span>
+              </h2>
+              <p className="text-emerald-100/90 text-xs sm:text-sm leading-relaxed max-w-sm">
+                Tạo tài khoản ngay hôm nay để nhận tích điểm Eco-Points, ưu đãi hữu cơ và đồng hành trồng rừng cùng EcoMart.
+              </p>
+            </div>
+
+            {/* Glassmorphism Feature Chips */}
+            <div className="space-y-2.5 pt-2">
+              <div className="p-3 bg-white/10 rounded-2xl border border-white/15 backdrop-blur-md flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/30 text-amber-300 flex items-center justify-center font-bold text-xs shrink-0">
+                  🎁
+                </div>
+                <div className="text-xs">
+                  <p className="font-bold text-white">Tích Điểm Eco-Points</p>
+                  <p className="text-emerald-200 text-[11px]">Đổi quà tặng & ưu đãi xanh hấp dẫn</p>
+                </div>
+              </div>
+
+              <div className="p-3 bg-white/10 rounded-2xl border border-white/15 backdrop-blur-md flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/30 text-emerald-300 flex items-center justify-center font-bold text-xs shrink-0">
+                  🔒
+                </div>
+                <div className="text-xs">
+                  <p className="font-bold text-white">Xác Thực OTP An Toàn</p>
+                  <p className="text-emerald-200 text-[11px]">Bảo mật thông tin tài khoản tuyệt đối</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Footer note */}
+          <div className="relative z-10 pt-4 border-t border-emerald-800/60 text-[11px] text-emerald-200/80">
+            © EcoMart Co., Ltd. Tất cả quyền được bảo lưu.
+          </div>
         </div>
 
-        {/* Form Đăng Ký */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-700">Họ và Tên</label>
-            <div className="relative">
-              <UserIcon className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
-              <input
-                type="text"
-                name="fullName"
-                required
-                placeholder="Nguyễn Văn A"
-                value={formData.fullName}
-                onChange={handleChange}
-                disabled={isSubmitting}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition-all"
-              />
+        {/* Right Side Form */}
+        <div className="w-full lg:w-1/2 p-8 sm:p-10 flex flex-col justify-center space-y-6">
+          {/* Header Branding (Mobile) */}
+          <div className="text-center lg:text-left space-y-2">
+            <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto lg:mx-0 shadow-sm lg:hidden mb-2">
+              <Leaf className="w-6 h-6" />
             </div>
-            {errors.fullName && (
-              <p className="text-xs text-rose-500 font-medium pl-1">{errors.fullName}</p>
-            )}
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+              Tạo Tài Khoản
+            </h1>
+            <p className="text-xs text-slate-500">
+              Điền thông tin bên dưới để trở thành thành viên EcoMart.
+            </p>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-700">Email</label>
-            <div className="relative">
-              <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
-              <input
-                type="email"
-                name="email"
-                required
-                placeholder="user@example.com"
-                value={formData.email}
-                onChange={handleChange}
-                disabled={isSubmitting}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition-all"
-              />
+          {/* Form Đăng Ký */}
+          <form onSubmit={handleSubmit} className="space-y-3.5">
+            <div className="space-y-1">
+              <label className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Họ và Tên</label>
+              <div className="relative">
+                <UserIcon className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
+                <input
+                  type="text"
+                  name="fullName"
+                  required
+                  placeholder="Nguyễn Văn A"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-gray-200 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                />
+              </div>
+              {errors.fullName && (
+                <p className="text-xs text-rose-500 font-semibold pl-1">{errors.fullName}</p>
+              )}
             </div>
-            {errors.email && (
-              <p className="text-xs text-rose-500 font-medium pl-1">{errors.email}</p>
-            )}
-          </div>
 
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-700">Số Điện Thoại</label>
-            <div className="relative">
-              <Phone className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
-              <input
-                type="tel"
-                name="phoneNumber"
-                required
-                placeholder="0912345678"
-                value={formData.phoneNumber}
-                onChange={handleChange}
-                disabled={isSubmitting}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition-all"
-              />
+            <div className="space-y-1">
+              <label className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Địa chỉ Email</label>
+              <div className="relative">
+                <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  placeholder="user@example.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-gray-200 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                />
+              </div>
+              {errors.email && (
+                <p className="text-xs text-rose-500 font-semibold pl-1">{errors.email}</p>
+              )}
             </div>
-            {errors.phoneNumber && (
-              <p className="text-xs text-rose-500 font-medium pl-1">{errors.phoneNumber}</p>
-            )}
-          </div>
 
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-700">Mật khẩu</label>
-            <div className="relative">
-              <Lock className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                name="password"
-                required
-                placeholder="Tối thiểu 6 ký tự"
-                value={formData.password}
-                onChange={handleChange}
-                disabled={isSubmitting}
-                className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition-all"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600 transition-colors"
-                aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
+            <div className="space-y-1">
+              <label className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Số Điện Thoại</label>
+              <div className="relative">
+                <Phone className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
+                <input
+                  type="tel"
+                  name="phoneNumber"
+                  required
+                  placeholder="0912345678"
+                  value={formData.phoneNumber}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-gray-200 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                />
+              </div>
+              {errors.phoneNumber && (
+                <p className="text-xs text-rose-500 font-semibold pl-1">{errors.phoneNumber}</p>
+              )}
             </div>
-            {errors.password && (
-              <p className="text-xs text-rose-500 font-medium pl-1">{errors.password}</p>
-            )}
-          </div>
 
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-700">Xác nhận mật khẩu</label>
-            <div className="relative">
-              <Lock className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                name="confirmPassword"
-                required
-                placeholder="Nhập lại mật khẩu"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                disabled={isSubmitting}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition-all"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Mật khẩu</label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    required
+                    placeholder="Tối thiểu 6 ký tự"
+                    value={formData.password}
+                    onChange={handleChange}
+                    disabled={isSubmitting}
+                    className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-gray-200 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600 transition-colors"
+                    aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-xs text-rose-500 font-semibold pl-1">{errors.password}</p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Xác nhận mật khẩu</label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="confirmPassword"
+                    required
+                    placeholder="Nhập lại mật khẩu"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    disabled={isSubmitting}
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-gray-200 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                  />
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-xs text-rose-500 font-semibold pl-1">{errors.confirmPassword}</p>
+                )}
+              </div>
             </div>
-            {errors.confirmPassword && (
-              <p className="text-xs text-rose-500 font-medium pl-1">{errors.confirmPassword}</p>
-            )}
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2 mt-3 cursor-pointer active:scale-[0.99]"
+            >
+              {isSubmitting ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Đang tạo tài khoản...</span>
+                </>
+              ) : (
+                <>
+                  <UserPlus className="w-4 h-4" />
+                  <span>Đăng Ký Tài Khoản</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Footer chuyển sang login */}
+          <div className="text-center text-xs text-slate-500 pt-2 border-t border-slate-100">
+            Đã có tài khoản?{' '}
+            <Link to="/login" className="font-bold text-emerald-600 hover:text-emerald-700 hover:underline">
+              Đăng nhập ngay
+            </Link>
           </div>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
-          >
-            {isSubmitting ? (
-              <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                <span>Đang tạo tài khoản...</span>
-              </>
-            ) : (
-              <>
-                <UserPlus className="w-4 h-4" />
-                <span>Đăng Ký Tài Khoản</span>
-              </>
-            )}
-          </button>
-        </form>
-
-        {/* Footer chuyển sang login */}
-        <div className="text-center text-xs text-slate-500 pt-2 border-t border-slate-100">
-          Đã có tài khoản?{' '}
-          <Link to="/login" className="font-bold text-emerald-600 hover:text-emerald-700 hover:underline">
-            Đăng nhập ngay
-          </Link>
         </div>
       </div>
 

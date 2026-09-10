@@ -27,7 +27,7 @@ flowchart TD
 
     CheckSpam -- "Hợp lệ" --> CreateUser["Tạo User trạng thái chưa xác thực email:<br/>isEmailVerified = false"]
     CreateUser --> GenOTP["Sinh mã OTP 6 chữ số ngẫu nhiên,<br/>hiệu lực 5 phút"]
-    GenOTP --> SendMail["Gửi email chứa mã OTP kích hoạt<br/>qua Resend API"]
+    GenOTP --> SendMail["Gửi email chứa mã OTP kích hoạt<br/>qua Gmail SMTP"]
     SendMail --> OpenModal["Frontend mở Modal nhập<br/>mã OTP xác thực"]
 
     OpenModal --> InputOTP["Người dùng nhập mã OTP 6 số"]

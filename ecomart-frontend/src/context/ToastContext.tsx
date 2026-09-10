@@ -3,6 +3,7 @@ import React, {
   useContext,
   useState,
   useCallback,
+  useEffect,
   ReactNode,
 } from 'react';
 import { ToastType, ToastItem, ToastContextType } from '../types';
@@ -14,9 +15,6 @@ interface ToastProviderProps {
   children: ReactNode;
 }
 
-/**
- * Toast Provider quản lý mảng thông báo popup cho toàn ứng dụng
- */
 export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
@@ -38,6 +36,16 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
     [removeToast]
   );
 
+  // Lắng nghe toast bắn ra từ axiosClient.ts (lỗi 429, lỗi chung không do component tự bắt)
+  useEffect(() => {
+    const handleGlobalToast = (e: Event) => {
+      const { type, message } = (e as CustomEvent<{ type: ToastType; message: string }>).detail;
+      showToast(message, type);
+    };
+    window.addEventListener('app:toast', handleGlobalToast);
+    return () => window.removeEventListener('app:toast', handleGlobalToast);
+  }, [showToast]);
+
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
@@ -46,9 +54,6 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   );
 };
 
-/**
- * Hook useToast tiện dụng để phát thông báo
- */
 export const useToast = (): ToastContextType => {
   const context = useContext(ToastContext);
   if (!context) {
@@ -56,3 +61,4 @@ export const useToast = (): ToastContextType => {
   }
   return context;
 };
+
