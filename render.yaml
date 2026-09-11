@@ -10,7 +10,7 @@ services:
     dockerContext: ./ecomart-backend
     plan: free
     region: singapore
-    healthCheckPath: /actuator/health
+    healthCheckPath: /v3/api-docs
     envVars:
       # Render web service mặc định bind PORT=10000
       - key: SERVER_PORT
