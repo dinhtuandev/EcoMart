@@ -1,0 +1,21 @@
+# Dependencies — reinstall via `npm ci` inside the builder stage
+node_modules/
+
+# Build output
+dist/
+
+# Git
+.git
+.gitignore
+
+# Environment / secrets — app falls back to the default API URL baked in src/lib/axiosClient.ts
+.env
+.env.*
+
+# Docs & editor
+*.md
+.vscode/
+
+# Docker files (not needed inside the image)
+Dockerfile
+.dockerignore
