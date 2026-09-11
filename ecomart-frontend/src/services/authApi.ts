@@ -11,6 +11,8 @@ import {
   ForgotPasswordPayload,
   ForgotPasswordResponse,
   ResetPasswordOtpPayload,
+  SocialConfigResponse,
+  SocialLoginPayload,
   User,
 } from '../types';
 
@@ -19,10 +21,24 @@ import {
  */
 export const authApi = {
   /**
+   * Lấy cấu hình Client ID của Google / Facebook từ Backend
+   */
+  getSocialConfig: (): Promise<ApiResponse<SocialConfigResponse>> =>
+    axiosClient.get('/auth/social-config'),
+
+  /**
    * Đăng nhập với email và mật khẩu
    */
   login: (payload: LoginPayload): Promise<ApiResponse<AuthResponse>> =>
     axiosClient.post('/auth/login', payload),
+
+  /**
+   * Đăng nhập thông qua Mạng xã hội (Google / Facebook)
+   */
+  socialLogin: (
+    payload: SocialLoginPayload
+  ): Promise<ApiResponse<AuthResponse>> =>
+    axiosClient.post('/auth/social-login', payload),
 
   /**
    * Đăng ký tài khoản mới (tạo OTP gửi qua Resend)

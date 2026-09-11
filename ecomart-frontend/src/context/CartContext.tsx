@@ -8,15 +8,18 @@ import React, {
   useRef,
 } from 'react';
 import { cartApi } from '../services/cartApi';
-import { useAuth } from './AuthContext';
+import { useAuth } from '../providers/AuthProvider';
 import { useToast } from './ToastContext';
 import { Cart, CartItem, CartContextType, CustomAxiosError } from '../types';
+import { isStorePreviewActive } from '../utils/storePreview';
 
 const CartContext = createContext<CartContextType | null>(null);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { showToast } = useToast();
+  const isStaffPreview =
+    (user?.role === 'MANAGER' || user?.role === 'ADMIN') && isStorePreviewActive();
 
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -26,7 +29,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // 1. Lấy dữ liệu giỏ hàng từ máy chủ
   const fetchCart = useCallback(async () => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || isStaffPreview) {
       setCart(null);
       return;
     }
@@ -42,7 +45,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isStaffPreview]);
 
   useEffect(() => {
     fetchCart();
@@ -66,6 +69,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // 3. Xử lý Thêm sản phẩm vào giỏ hàng
   const handleAddToCart = async (productId: number, quantity = 1): Promise<boolean> => {
+    if (isStaffPreview) {
+      showToast('Chế độ xem sàn: không thể thêm sản phẩm vào giỏ hàng.', 'warning');
+      return false;
+    }
+
     if (!isAuthenticated) {
       showToast('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.', 'warning');
       return false;
@@ -93,6 +101,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // 4. Optimistic Update + Debounce Sync 500ms khi tăng/giảm số lượng
   const handleLocalQuantityChange = (cartItemId: number, newQuantity: number): void => {
+    if (isStaffPreview) return;
     if (!cart) return;
 
     const targetItem = cart.items.find((item) => item.id === cartItemId);
@@ -144,6 +153,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // 5. Xóa 1 sản phẩm khỏi giỏ hàng (Optimistic Update)
   const handleRemoveFromCart = async (cartItemId: number): Promise<void> => {
+    if (isStaffPreview) return;
     if (!cart) return;
 
     const originalCart = { ...cart };
@@ -173,6 +183,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // 6. Xóa toàn bộ giỏ hàng (Clear Cart)
   const handleClearCart = async (): Promise<void> => {
+    if (isStaffPreview) return;
     if (!cart || cart.items.length === 0) return;
 
     const originalCart = { ...cart };

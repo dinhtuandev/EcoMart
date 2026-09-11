@@ -15,6 +15,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import { userApi } from '../../services/userApi';
+import { TablePagination } from '../../components/ui/TablePagination';
 import { useToast } from '../../context/ToastContext';
 import { User, PageResponse, CustomAxiosError } from '../../types';
 
@@ -33,6 +34,7 @@ export const AdminUserPage: React.FC = () => {
   const [debouncedKeyword, setDebouncedKeyword] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'LOCKED'>('ALL');
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize] = useState<number>(10);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Modal xác nhận khóa / mở khóa
@@ -168,9 +170,6 @@ export const AdminUserPage: React.FC = () => {
             <h1 className="text-xl font-black text-slate-900 tracking-tight">
               Quản Trị Người Dùng & Khách Hàng
             </h1>
-            <p className="text-xs text-slate-500">
-              Tổng số tài khoản: <span className="font-bold text-slate-800">{pageData.totalElements}</span> người dùng
-            </p>
           </div>
         </div>
       </div>
@@ -311,14 +310,14 @@ export const AdminUserPage: React.FC = () => {
                       </td>
 
                       {/* Trạng Thái */}
-                      <td className="py-4 px-6">
+                      <td className="py-4 px-6 whitespace-nowrap">
                         {item.isActive ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
                             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                            <span>Hoạt động</span>
+                            <span>Đang hoạt động</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 whitespace-nowrap">
                             <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
                             <span>Đã khóa</span>
                           </span>
@@ -326,14 +325,14 @@ export const AdminUserPage: React.FC = () => {
                       </td>
 
                       {/* Thao Tác (Khóa / Mở khóa) */}
-                      <td className="py-4 px-6 text-right">
+                      <td className="py-4 px-6 text-right whitespace-nowrap">
                         {isAdminRole ? (
                           <span className="text-xs text-slate-400 italic">Quản trị viên</span>
                         ) : (
                           <button
                             type="button"
                             onClick={() => setUserToToggle(item)}
-                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white shadow-sm hover:shadow transition-all ${
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white shadow-sm hover:shadow transition-all cursor-pointer ${
                               item.isActive
                                 ? 'bg-rose-500 hover:bg-rose-600'
                                 : 'bg-emerald-600 hover:bg-emerald-700'
@@ -362,39 +361,14 @@ export const AdminUserPage: React.FC = () => {
         )}
 
         {/* Thanh phân trang Pagination */}
-        {pageData.totalPages > 1 && (
-          <div className="p-4 sm:p-6 border-t border-gray-100 flex items-center justify-between gap-4">
-            <span className="text-xs text-slate-500 font-medium">
-              Trang <span className="font-bold text-slate-900">{pageData.pageNumber}</span> / {pageData.totalPages}
-            </span>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                disabled={pageData.pageNumber <= 1 || isLoading}
-                className="p-2 rounded-xl border border-gray-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                aria-label="Trang trước"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-
-              <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-lg">
-                {pageData.pageNumber}
-              </span>
-
-              <button
-                type="button"
-                onClick={() => setCurrentPage((prev) => Math.min(pageData.totalPages, prev + 1))}
-                disabled={pageData.last || isLoading}
-                className="p-2 rounded-xl border border-gray-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                aria-label="Trang tiếp"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
+        <TablePagination
+          currentPage={pageData.pageNumber}
+          totalPages={pageData.totalPages}
+          totalItems={pageData.totalElements}
+          itemsPerPage={pageData.pageSize || 10}
+          onPageChange={(page) => setCurrentPage(page)}
+          itemName="người dùng"
+        />
       </div>
 
       {/* Modal xác nhận Khóa / Mở khóa tài khoản */}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { LogIn, Lock, Mail, Eye, EyeOff, RefreshCw, Leaf } from 'lucide-react';
 import { authApi } from '../services/authApi';
 import { useAuth } from '../providers/AuthProvider';
@@ -17,9 +17,20 @@ export const LoginPage: React.FC = () => {
   const [showOtpModal, setShowOtpModal] = useState<boolean>(false);
   const [socialConfig, setSocialConfig] = useState<{ googleClientId?: string; facebookAppId?: string }>({});
 
-  const { login } = useAuth();
+  const { login, isAuthenticated, isLoading, user } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
+
+  // Guard: nếu đã đăng nhập rồi thì redirect đúng trang theo role
+  if (!isLoading && isAuthenticated && user) {
+    if (user.role === 'ADMIN') {
+      return <Navigate to="/admin" replace />;
+    }
+    if (user.role === 'MANAGER') {
+      return <Navigate to="/manager" replace />;
+    }
+    return <Navigate to="/" replace />;
+  }
 
   // Tự động nạp cấu hình Social Client IDs từ Backend
   React.useEffect(() => {
@@ -45,7 +56,7 @@ export const LoginPage: React.FC = () => {
       const authData = apiRes.data;
       login(authData);
       showToast(`Chào mừng trở lại, ${authData.user.fullName}!`, 'success');
-      navigate(authData.user.role === 'ADMIN' ? '/admin' : '/');
+      navigate(authData.user.role === 'ADMIN' ? '/admin' : authData.user.role === 'MANAGER' ? '/manager' : '/');
     } catch (err: unknown) {
       const customError = err as CustomAxiosError;
       showToast(customError.response?.data?.message || `Đăng nhập ${provider} thất bại.`, 'error');
@@ -191,6 +202,8 @@ export const LoginPage: React.FC = () => {
 
       if (authData.user.role === 'ADMIN') {
         navigate('/admin');
+      } else if (authData.user.role === 'MANAGER') {
+        navigate('/manager');
       } else {
         navigate('/');
       }
@@ -221,6 +234,8 @@ export const LoginPage: React.FC = () => {
     login(authData);
     if (authData.user.role === 'ADMIN') {
       navigate('/admin');
+    } else if (authData.user.role === 'MANAGER') {
+      navigate('/manager');
     } else {
       navigate('/');
     }

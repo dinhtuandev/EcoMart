@@ -6,6 +6,7 @@ import com.ecomart.exception.UnauthorizedException;
 import com.ecomart.security.JwtAuthenticationFilter;
 import com.ecomart.security.JwtTokenProvider;
 import com.ecomart.service.AuthService;
+import com.ecomart.service.SocialAuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -44,7 +45,7 @@ class AuthControllerTest {
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @MockBean
-    private com.ecomart.service.SocialAuthService socialAuthService;
+    private SocialAuthService socialAuthService;
 
     private AuthResponse authResponse;
     private UserResponse userResponse;

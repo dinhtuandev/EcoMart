@@ -27,9 +27,16 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import com.ecomart.entity.Policy;
+import com.ecomart.entity.enums.PolicyType;
+import com.ecomart.service.PolicyService;
+import com.ecomart.service.ShippingService;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +51,8 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final InventoryRepository inventoryRepository;
     private final PaymentService paymentService;
+    private final PolicyService policyService;
+    private final ShippingService shippingService;
 
     @Override
     @Transactional
@@ -66,6 +75,16 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // Validate stock and visibility for all items before placing order
+        List<Long> productIds = cart.getItems().stream()
+                .map(item -> item.getProduct().getId())
+                .distinct()
+                .sorted()
+                .toList();
+
+        List<Inventory> lockedInventories = inventoryRepository.findAllByProductIdsWithLock(productIds);
+        Map<Long, Inventory> inventoryMap = lockedInventories.stream()
+                .collect(Collectors.toMap(inv -> inv.getProduct().getId(), Function.identity()));
+
         List<OrderItem> orderItems = new ArrayList<>();
         BigDecimal totalAmount = BigDecimal.ZERO;
 
@@ -75,8 +94,10 @@ public class OrderServiceImpl implements OrderService {
                 throw new UnprocessableEntityException("Sản phẩm '" + product.getName() + "' tạm thời không khả dụng để đặt hàng");
             }
 
-            Inventory inventory = inventoryRepository.findByProductId(product.getId())
-                    .orElseThrow(() -> new UnprocessableEntityException("Không tìm thấy thông tin tồn kho của sản phẩm: " + product.getName()));
+            Inventory inventory = inventoryMap.get(product.getId());
+            if (inventory == null) {
+                throw new UnprocessableEntityException("Không tìm thấy thông tin tồn kho của sản phẩm: " + product.getName());
+            }
 
             if (inventory.getQuantity() < cartItem.getQuantity()) {
                 throw new UnprocessableEntityException("Sản phẩm '" + product.getName() + "' không đủ tồn kho (còn " + inventory.getQuantity() + ", yêu cầu " + cartItem.getQuantity() + ")");
@@ -84,7 +105,6 @@ public class OrderServiceImpl implements OrderService {
 
             // Decrement inventory stock
             inventory.setQuantity(inventory.getQuantity() - cartItem.getQuantity());
-            inventoryRepository.save(inventory);
 
             BigDecimal unitPrice = product.getSellingPrice();
             BigDecimal lineTotal = unitPrice.multiply(BigDecimal.valueOf(cartItem.getQuantity()));
@@ -100,6 +120,8 @@ public class OrderServiceImpl implements OrderService {
 
             orderItems.add(orderItem);
         }
+
+        inventoryRepository.saveAll(lockedInventories);
 
         String deliveryAddress = formatDeliveryAddress(address);
         String orderCode = generateOrderCode();
@@ -316,6 +338,14 @@ public class OrderServiceImpl implements OrderService {
         order.setConfirmedAt(LocalDateTime.now());
 
         Order savedOrder = orderRepository.save(order);
+
+        // Auto-create forward shipping order
+        try {
+            shippingService.createForwardShipping(savedOrder);
+        } catch (Exception e) {
+            // Log shipping creation error but do not block order confirmation
+        }
+
         return mapToOrderResponse(savedOrder);
     }
 
@@ -358,7 +388,28 @@ public class OrderServiceImpl implements OrderService {
             order.setPaidAt(LocalDateTime.now());
         }
 
+        // Calculate return and warranty eligibility based on policies
+        if (order.getItems() != null) {
+            for (OrderItem item : order.getItems()) {
+                Long productId = item.getProduct() != null ? item.getProduct().getId() : null;
+                Long categoryId = (item.getProduct() != null && item.getProduct().getCategory() != null)
+                        ? item.getProduct().getCategory().getId()
+                        : null;
+
+                Policy returnPolicy = policyService != null ? policyService.resolvePolicy(productId, categoryId, PolicyType.RETURN) : null;
+                Policy warrantyPolicy = policyService != null ? policyService.resolvePolicy(productId, categoryId, PolicyType.WARRANTY) : null;
+
+                int returnDays = returnPolicy != null ? returnPolicy.getDurationDays() : 7;
+                int warrantyDays = warrantyPolicy != null ? warrantyPolicy.getDurationDays() : 180;
+
+                item.setReturnEligibleUntil(order.getCompletedAt().plusDays(returnDays));
+                item.setWarrantyEligibleUntil(order.getCompletedAt().plusDays(warrantyDays));
+                item.setReturnStatus("NONE");
+            }
+        }
+
         Order savedOrder = orderRepository.save(order);
+
         return mapToOrderResponse(savedOrder);
     }
 
@@ -399,11 +450,16 @@ public class OrderServiceImpl implements OrderService {
             throw new ConflictException("Không thể xác nhận thanh toán cho đơn hàng đã bị Hủy");
         }
 
+        if (order.getPaymentMethod() == PaymentMethod.COD) {
+            throw new ConflictException("Đơn hàng COD chỉ được ghi nhận thanh toán khi giao hàng thành công (COMPLETED)");
+        }
+
+        if (order.getPaymentStatus() == PaymentStatus.PAID) {
+            throw new ConflictException("Đơn hàng đã ở trạng thái Đã thanh toán (PAID)");
+        }
+
         order.setPaymentStatus(PaymentStatus.PAID);
         order.setPaidAt(LocalDateTime.now());
-        if (order.getStatus() == OrderStatus.PENDING) {
-            order.setStatus(OrderStatus.CONFIRMED);
-        }
 
         Order savedOrder = orderRepository.save(order);
 
@@ -424,11 +480,9 @@ public class OrderServiceImpl implements OrderService {
     private void restoreInventoryStock(Order order) {
         if (order.getItems() != null) {
             for (OrderItem item : order.getItems()) {
-                inventoryRepository.findByProductId(item.getProduct().getId())
-                        .ifPresent(inventory -> {
-                            inventory.setQuantity(inventory.getQuantity() + item.getQuantity());
-                            inventoryRepository.save(inventory);
-                        });
+                if (item.getProduct() != null && item.getProduct().getId() != null) {
+                    inventoryRepository.incrementStock(item.getProduct().getId(), item.getQuantity());
+                }
             }
         }
     }
@@ -480,6 +534,12 @@ public class OrderServiceImpl implements OrderService {
             }
         }
 
+        ShippingOrderResponse shippingOrder = null;
+        try {
+            shippingOrder = shippingService.getForwardShippingByOrderId(order.getId());
+        } catch (Exception ignored) {
+        }
+
         return OrderResponse.builder()
                 .id(order.getId())
                 .orderCode(order.getOrderCode())
@@ -498,6 +558,7 @@ public class OrderServiceImpl implements OrderService {
                 .paidAt(order.getPaidAt())
                 .items(itemResponses)
                 .paymentTransactions(txResponses)
+                .shippingOrder(shippingOrder)
                 .build();
     }
 

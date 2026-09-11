@@ -34,6 +34,7 @@ export const ProfilePage: React.FC = () => {
   const { user, updateUser } = useAuth();
   const { showToast } = useToast();
 
+  const isCustomer = user?.role === 'CUSTOMER';
   const [activeTab, setActiveTab] = useState<'info' | 'address' | 'password' | 'reviews'>('info');
 
   // State Tab Thông Tin
@@ -319,14 +320,16 @@ export const ProfilePage: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Link
-            to="/orders"
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-2xl shadow-sm hover:shadow-md transition-all"
-          >
-            <Package className="w-4 h-4" />
-            <span>Lịch Sử Đơn Hàng</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+          {isCustomer && (
+            <Link
+              to="/orders"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-2xl shadow-sm hover:shadow-md transition-all"
+            >
+              <Package className="w-4 h-4" />
+              <span>Lịch Sử Đơn Hàng</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          )}
 
           <div className="flex items-center gap-2 text-xs text-slate-400 bg-slate-50 px-3.5 py-2 rounded-xl border border-gray-100">
             <Calendar className="w-4 h-4 text-emerald-600" />
@@ -381,6 +384,7 @@ export const ProfilePage: React.FC = () => {
           <span>Đổi Mật Khẩu</span>
         </button>
 
+        {isCustomer && (
         <button
           type="button"
           onClick={() => setActiveTab('reviews')}
@@ -398,6 +402,7 @@ export const ProfilePage: React.FC = () => {
             </span>
           )}
         </button>
+        )}
       </div>
 
       {/* Nội dung Tab */}

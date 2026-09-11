@@ -17,6 +17,7 @@ import { reviewApi } from '../services/reviewApi';
 import { EcoScoreBadge } from '../components/product/EcoScoreBadge';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
+import { useStorePreview } from '../hooks/useStorePreview';
 import { Product, ProductImage, ProductReviewSummary } from '../types';
 
 export const ProductDetailPage: React.FC = () => {
@@ -24,6 +25,7 @@ export const ProductDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { handleAddToCart } = useCart();
   const { showToast } = useToast();
+  const { isPreview } = useStorePreview();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedImage, setSelectedImage] = useState<string>('');
@@ -286,6 +288,12 @@ export const ProductDetailPage: React.FC = () => {
 
           {/* Bottom Actions: Quantity Stepper & Buy Buttons */}
           <div className="space-y-4 pt-6 border-t border-gray-100">
+            {isPreview ? (
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-sm font-semibold text-emerald-800">
+                Chế độ xem sàn: bạn chỉ đang xem thông tin sản phẩm, không thể mua hàng.
+              </div>
+            ) : (
+              <>
             {/* Quantity Stepper */}
             <div className="flex items-center gap-4">
               <span className="text-xs font-bold text-slate-700">Số lượng:</span>
@@ -344,6 +352,8 @@ export const ProductDetailPage: React.FC = () => {
                 <span>Mua Ngay</span>
               </button>
             </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -366,6 +376,7 @@ export const ProductDetailPage: React.FC = () => {
       <ProductReviewSection productId={product.id} />
 
       {/* Sticky Mobile Add-to-Cart Bar (lg:hidden) */}
+      {!isPreview && (
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-2xl p-3 flex items-center justify-between gap-3 lg:hidden">
         <div className="min-w-0 flex-1">
           <p className="text-[10px] text-slate-400 font-bold uppercase truncate">
@@ -392,6 +403,7 @@ export const ProductDetailPage: React.FC = () => {
           <span>Thêm Vào Giỏ</span>
         </button>
       </div>
+      )}
     </div>
   );
 };

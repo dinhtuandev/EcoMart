@@ -10,6 +10,7 @@ import {
   Package,
   AlertCircle,
   Loader2,
+  Plus,
 } from 'lucide-react';
 import { addressApi } from '../services/addressApi';
 import { orderApi } from '../services/orderApi';
@@ -17,6 +18,7 @@ import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { Address, CartItem, PaymentMethod, CustomAxiosError } from '../types';
 import { VietQrModal } from '../components/payment/VietQrModal';
+import AddressModal from '../components/address/AddressModal';
 
 interface CheckoutLocationState {
   selectedCartItemIds?: number[];
@@ -81,6 +83,7 @@ export const CheckoutPage: React.FC = () => {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
   const [isLoadingAddr, setIsLoadingAddr] = useState<boolean>(true);
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState<boolean>(false);
 
   // Phương thức thanh toán
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD');
@@ -110,7 +113,12 @@ export const CheckoutPage: React.FC = () => {
         const addrs = res.data || [];
         setAddresses(addrs);
         const def = addrs.find((a) => a.isDefault) ?? addrs[0];
-        if (def) setSelectedAddressId(def.id);
+        if (def) {
+          setSelectedAddressId(def.id);
+        } else if (addrs.length === 0) {
+          // Khách hàng chưa có địa chỉ -> Tự động mở popup thêm địa chỉ trực tiếp
+          setIsAddressModalOpen(true);
+        }
       } catch {
         showToast('Không thể tải danh sách địa chỉ giao hàng.', 'error');
       } finally {
@@ -120,9 +128,22 @@ export const CheckoutPage: React.FC = () => {
     load();
   }, [showToast]);
 
+  const handleAddressCreated = (newAddress: Address): void => {
+    setAddresses((prev) => {
+      if (newAddress.isDefault) {
+        return [newAddress, ...prev.map((a) => ({ ...a, isDefault: false }))];
+      }
+      return [newAddress, ...prev];
+    });
+    setSelectedAddressId(newAddress.id);
+    setIsAddressModalOpen(false);
+    showToast('Đã lưu và chọn địa chỉ nhận hàng cho đơn này!', 'success');
+  };
+
   const handlePlaceOrder = async (): Promise<void> => {
-    if (!selectedAddressId) {
-      showToast('Vui lòng chọn địa chỉ giao hàng.', 'warning');
+    if (!selectedAddressId || addresses.length === 0) {
+      setIsAddressModalOpen(true);
+      showToast('Vui lòng thêm địa chỉ nhận hàng để hoàn tất đặt hàng.', 'warning');
       return;
     }
     if (itemsToCheckout.length === 0) {
@@ -250,12 +271,22 @@ export const CheckoutPage: React.FC = () => {
                 <MapPin className="w-4 h-4 text-emerald-600" />
                 Địa Chỉ Giao Hàng
               </h2>
-              <Link
-                to="/profile?tab=address"
-                className="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors"
-              >
-                Quản lý địa chỉ →
-              </Link>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsAddressModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-xl border border-emerald-200 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>+ Thêm địa chỉ mới</span>
+                </button>
+                <Link
+                  to="/profile?tab=address"
+                  className="text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  Quản lý →
+                </Link>
+              </div>
             </div>
 
             {isLoadingAddr ? (
@@ -264,19 +295,28 @@ export const CheckoutPage: React.FC = () => {
                 Đang tải danh sách địa chỉ...
               </div>
             ) : addresses.length === 0 ? (
-              <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
-                <div>
-                  <p className="text-xs font-bold text-amber-800">
-                    Bạn chưa có địa chỉ giao hàng nào
-                  </p>
-                  <Link
-                    to="/profile?tab=address"
-                    className="text-xs text-amber-700 underline"
-                  >
-                    Thêm địa chỉ mới tại đây
-                  </Link>
+              <div className="p-5 bg-emerald-50/60 border border-emerald-200 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3 text-center sm:text-left">
+                  <div className="w-10 h-10 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-emerald-950">
+                      Bạn chưa có địa chỉ nhận hàng nào
+                    </p>
+                    <p className="text-xs text-emerald-700 mt-0.5">
+                      Vui lòng nhập địa chỉ nhận hàng để EcoMart chuẩn bị và giao kiện hàng cho bạn.
+                    </p>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setIsAddressModalOpen(true)}
+                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 flex items-center gap-1.5 whitespace-nowrap transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Thêm địa chỉ ngay</span>
+                </button>
               </div>
             ) : (
               <div className="space-y-2.5">
@@ -414,7 +454,7 @@ export const CheckoutPage: React.FC = () => {
             <button
               type="button"
               onClick={handlePlaceOrder}
-              disabled={isSubmitting || addresses.length === 0 || !selectedAddressId}
+              disabled={isSubmitting || itemsToCheckout.length === 0}
               className="w-full py-3.5 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-2xl shadow-lg shadow-emerald-600/20 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
             >
               {isSubmitting ? (
@@ -462,6 +502,13 @@ export const CheckoutPage: React.FC = () => {
           }}
         />
       )}
+
+      {/* Address Creation Modal */}
+      <AddressModal
+        isOpen={isAddressModalOpen}
+        onClose={() => setIsAddressModalOpen(false)}
+        onSuccess={handleAddressCreated}
+      />
     </div>
   );
 };

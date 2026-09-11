@@ -1,10 +1,11 @@
 # ============================================================
 #  Profile "docker" — dùng khi chạy ứng dụng TRONG Docker Compose.
 #  Kích hoạt bằng biến môi trường SPRING_PROFILES_ACTIVE=docker
-#  (đã set sẵn trong compose.yaml) hoặc --spring.profiles.active=docker.
+#  (đã set sẵn trong docker-compose.yml ở thư mục gốc repo)
+#  hoặc --spring.profiles.active=docker.
 #
 #  Khác với mặc định (H2 in-memory), profile này kết nối PostgreSQL
-#  chạy trong container "postgres" của compose.yaml.
+#  chạy trong container "postgres" của docker-compose.yml.
 # ============================================================
 spring:
   datasource:

@@ -1,10 +1,10 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../providers/AuthProvider';
-import Spinner from '../components/common/Spinner';
+import Spinner from '../components/ui/Spinner';
 
 interface ProtectedRouteProps {
-  allowedRoles?: Array<'CUSTOMER' | 'ADMIN'>;
+  allowedRoles?: Array<'CUSTOMER' | 'MANAGER' | 'ADMIN'>;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles = [] }) => {
@@ -22,7 +22,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles = [] }) =>
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles.length > 0 && (!user || !allowedRoles.includes(user.role))) {
+  if (allowedRoles.length > 0 && (!user || !(allowedRoles as Array<string>).includes(user.role))) {
     return <Navigate to="/" replace />;
   }
 

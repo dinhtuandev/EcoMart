@@ -16,7 +16,7 @@ import {
   PackageX,
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../providers/AuthProvider';
 
 export const CartPage: React.FC = () => {
   const {

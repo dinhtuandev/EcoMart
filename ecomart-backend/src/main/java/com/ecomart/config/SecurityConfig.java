@@ -53,6 +53,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/brands/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/certifications/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/policies/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/shipping/track/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/files/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/files/upload").authenticated()
 
                         // Contact, Content Pages & Store Settings Public Endpoints
                         .requestMatchers(HttpMethod.POST, "/api/v1/contact-messages").permitAll()
@@ -65,31 +69,38 @@ public class SecurityConfig {
                         // Swagger UI & OpenAPI Docs
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
-                        // Actuator health probe (Render health check + UptimeRobot keep-alive)
-                        .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
-
                         // Admin Only Endpoints (User Management, Sensitive System & Payment Settings)
-                        .requestMatchers("/api/v1/admin/users/**", "/api/v1/admin/settings/**").hasRole("ADMIN")
-
-                        // Operations Endpoints (Accessible by both ADMIN and MANAGER)
                         .requestMatchers(
-                                "/api/v1/admin/products/**",
-                                "/api/v1/admin/categories/**",
-                                "/api/v1/admin/brands/**",
-                                "/api/v1/admin/certifications/**",
-                                "/api/v1/admin/inventory/**",
-                                "/api/v1/admin/orders/**",
-                                "/api/v1/admin/reviews/**",
-                                "/api/v1/admin/contact-messages/**",
-                                "/api/v1/admin/pages/**",
-                                "/api/v1/admin/reports/**"
+                                "/api/v1/admin/users", "/api/v1/admin/users/**",
+                                "/api/v1/admin/settings", "/api/v1/admin/settings/**"
+                        ).hasRole("ADMIN")
+
+                        // Shared Support & Content Endpoints (Accessible by both ADMIN and MANAGER)
+                        .requestMatchers(
+                                "/api/v1/admin/contact-messages", "/api/v1/admin/contact-messages/**",
+                                "/api/v1/admin/pages", "/api/v1/admin/pages/**"
                         ).hasAnyRole("ADMIN", "MANAGER")
+
+                        // Operations Endpoints (Accessible strictly by MANAGER)
+                        .requestMatchers(
+                                "/api/v1/admin/products", "/api/v1/admin/products/**",
+                                "/api/v1/admin/categories", "/api/v1/admin/categories/**",
+                                "/api/v1/admin/brands", "/api/v1/admin/brands/**",
+                                "/api/v1/admin/certifications", "/api/v1/admin/certifications/**",
+                                "/api/v1/admin/inventory", "/api/v1/admin/inventory/**",
+                                "/api/v1/admin/orders", "/api/v1/admin/orders/**",
+                                "/api/v1/admin/reviews", "/api/v1/admin/reviews/**",
+                                "/api/v1/admin/reports", "/api/v1/admin/reports/**",
+                                "/api/v1/admin/returns", "/api/v1/admin/returns/**",
+                                "/api/v1/admin/shipping", "/api/v1/admin/shipping/**",
+                                "/api/v1/admin/policies", "/api/v1/admin/policies/**"
+                        ).hasRole("MANAGER")
 
                         // Default Admin Endpoints
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 
                         // Customer / Authenticated Endpoints
-                        .requestMatchers("/api/v1/me/**", "/api/v1/orders/**").authenticated()
+                        .requestMatchers("/api/v1/me/**", "/api/v1/orders/**", "/api/v1/returns/**", "/api/v1/shipping/**").authenticated()
 
                         // Any other request must be authenticated
                         .anyRequest().authenticated()

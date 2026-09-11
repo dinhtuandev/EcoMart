@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import AdminHeader from './AdminHeader';
 import AdminSidebar from './AdminSidebar';
+import OpsBreadcrumb from './OpsBreadcrumb';
 
 /**
  * Layout dành cho trang Hồ Sơ của Manager/Admin.
@@ -14,6 +15,7 @@ export const AdminProfileLayout: React.FC = () => {
       <div className="flex-1 flex overflow-hidden">
         <AdminSidebar />
         <main className="flex-1 h-full overflow-y-auto p-6 sm:p-8">
+          <OpsBreadcrumb />
           <Outlet />
         </main>
       </div>

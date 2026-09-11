@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { storeSettingApi } from '../../services/storeSettingApi';
 import { StoreSetting } from '../../types';
+import { useStorePreview } from '../../hooks/useStorePreview';
 
 export const Footer: React.FC = () => {
   const [settings, setSettings] = useState<StoreSetting | null>(null);

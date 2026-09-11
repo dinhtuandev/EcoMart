@@ -1,15 +1,17 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import Header from './Header';
+import AdminHeader from './AdminHeader';
 import AdminSidebar from './AdminSidebar';
+import OpsBreadcrumb from './OpsBreadcrumb';
 
 export const AdminLayout: React.FC = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-slate-100 text-slate-800">
-      <Header />
-      <div className="flex-1 flex">
+    <div className="h-screen flex flex-col bg-slate-100 text-slate-800 overflow-hidden">
+      <AdminHeader />
+      <div className="flex-1 flex overflow-hidden">
         <AdminSidebar />
-        <main className="flex-1 p-8 overflow-y-auto">
+        <main className="flex-1 h-full overflow-y-auto p-6 sm:p-8">
+          <OpsBreadcrumb />
           <Outlet />
         </main>
       </div>

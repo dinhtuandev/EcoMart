@@ -19,12 +19,37 @@ public class DataInitializer implements CommandLineRunner {
     private final RoleRepository roleRepository;
     private final ContentPageRepository contentPageRepository;
     private final StoreSettingRepository storeSettingRepository;
+    private final com.ecomart.repository.PolicyRepository policyRepository;
 
     @Override
     public void run(String... args) {
         initRoles();
         initContentPages();
         initStoreSettings();
+        initPolicies();
+    }
+
+    private void initPolicies() {
+        if (policyRepository.findFirstByProductIdIsNullAndCategoryIdIsNullAndPolicyTypeAndIsActiveTrue(com.ecomart.entity.enums.PolicyType.RETURN).isEmpty()) {
+            policyRepository.save(com.ecomart.entity.Policy.builder()
+                    .name("Chính sách Đổi trả Toàn sàn")
+                    .policyType(com.ecomart.entity.enums.PolicyType.RETURN)
+                    .durationDays(7)
+                    .shippingFeeBearer(com.ecomart.entity.enums.FeeBearer.SHOP)
+                    .conditionsDescription("Hỗ trợ đổi trả miễn phí trong 7 ngày kể từ khi nhận hàng đối với sản phẩm bị lỗi kỹ thuật hoặc giao sai.")
+                    .isActive(true)
+                    .build());
+        }
+        if (policyRepository.findFirstByProductIdIsNullAndCategoryIdIsNullAndPolicyTypeAndIsActiveTrue(com.ecomart.entity.enums.PolicyType.WARRANTY).isEmpty()) {
+            policyRepository.save(com.ecomart.entity.Policy.builder()
+                    .name("Chính sách Bảo hành Toàn sàn")
+                    .policyType(com.ecomart.entity.enums.PolicyType.WARRANTY)
+                    .durationDays(180)
+                    .shippingFeeBearer(com.ecomart.entity.enums.FeeBearer.SHOP)
+                    .conditionsDescription("Bảo hành chính hãng 6 tháng cho các lỗi kỹ thuật phát sinh từ nhà sản xuất.")
+                    .isActive(true)
+                    .build());
+        }
     }
 
     private void initRoles() {

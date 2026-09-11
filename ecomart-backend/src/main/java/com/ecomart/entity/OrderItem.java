@@ -43,4 +43,14 @@ public class OrderItem {
 
     @Column(name = "line_total", nullable = false, precision = 12, scale = 2)
     private BigDecimal lineTotal;
+
+    @Column(name = "return_eligible_until")
+    private java.time.LocalDateTime returnEligibleUntil;
+
+    @Column(name = "warranty_eligible_until")
+    private java.time.LocalDateTime warrantyEligibleUntil;
+
+    @Column(name = "return_status", length = 30)
+    @Builder.Default
+    private String returnStatus = "NONE";
 }

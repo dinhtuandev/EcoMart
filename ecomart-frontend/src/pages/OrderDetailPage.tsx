@@ -15,13 +15,19 @@ import {
   Star,
   X,
   QrCode,
+  Truck,
+  Boxes,
+  Navigation,
+  ChevronRight,
 } from 'lucide-react';
 import { orderApi } from '../services/orderApi';
 import { reviewApi } from '../services/reviewApi';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
-import { Order, OrderStatus, OrderItem, CustomAxiosError } from '../types';
+import { Order, OrderItem, CustomAxiosError } from '../types';
 import { VietQrModal } from '../components/payment/VietQrModal';
+import { ReturnRequestModal } from '../components/return/ReturnRequestModal';
+import { ShippingTrackingModal } from '../components/shipping/ShippingTrackingModal';
 
 const formatCurrency = (amount: number): string =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount || 0);
@@ -42,6 +48,63 @@ const getPaymentMethodLabel = (method: string): string => {
   return map[method] ?? method;
 };
 
+const getCarrierLabel = (carrier?: string): string => {
+  const map: Record<string, string> = {
+    ECO_EXPRESS: 'Eco Express (Vận chuyển sinh thái)',
+    GHN: 'Giao Hàng Nhanh (GHN)',
+    GHTK: 'Giao Hàng Tiết Kiệm (GHTK)',
+    VIETTEL_POST: 'Viettel Post',
+  };
+  return carrier ? (map[carrier] ?? carrier) : 'Eco Express';
+};
+
+const getShippingStatusConfig = (status?: string): { label: string; color: string; desc: string } => {
+  const configs: Record<string, { label: string; color: string; desc: string }> = {
+    READY_TO_PICK: {
+      label: 'Chờ lấy hàng',
+      color: 'bg-amber-100 text-amber-800 border-amber-200',
+      desc: 'EcoMart đã đóng gói kiện hàng và đang chờ bưu tá Eco Express đến nhận.',
+    },
+    PICKING: {
+      label: 'Đang lấy hàng',
+      color: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+      desc: 'Bưu tá đã lấy kiện hàng và đang vận chuyển về trung tâm phân loại.',
+    },
+    DELIVERING: {
+      label: 'Đang vận chuyển',
+      color: 'bg-blue-100 text-blue-800 border-blue-200',
+      desc: 'Kiện hàng đang được luân chuyển an toàn đến bưu cục gần bạn.',
+    },
+    ARRIVED_AT_LOCAL_HUB: {
+      label: 'Đã đến bưu cục phát (Giao trong 24h)',
+      color: 'bg-amber-100 text-amber-800 border-amber-300 font-bold',
+      desc: 'Thông báo: Kiện hàng đã đến bưu cục phát tại địa phương gần bạn. Dự kiến sẽ được giao trong vòng 24 giờ tới.',
+    },
+    DELIVERED: {
+      label: 'Giao hàng thành công',
+      color: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+      desc: 'Giao hàng thành công. Bạn đã nhận trọn vẹn kiện hàng xanh.',
+    },
+    DELIVERY_FAILED: {
+      label: 'Giao thất bại',
+      color: 'bg-rose-100 text-rose-800 border-rose-200',
+      desc: 'Giao hàng chưa thành công. Bưu tá sẽ liên hệ lại sớm nhất.',
+    },
+    RETURNED_TO_SENDER: {
+      label: 'Đã hoàn kho',
+      color: 'bg-purple-100 text-purple-800 border-purple-200',
+      desc: 'Kiện hàng đã được hoàn trả về kho EcoMart.',
+    },
+  };
+  return (
+    (status && configs[status]) || {
+      label: status || 'Đang xử lý',
+      color: 'bg-slate-100 text-slate-700 border-slate-200',
+      desc: 'Đơn hàng đang trong tiến trình xử lý.',
+    }
+  );
+};
+
 const getPaymentStatusConfig = (status: string): { label: string; color: string } => {
   const configs: Record<string, { label: string; color: string }> = {
     UNPAID: { label: 'Chưa thanh toán', color: 'bg-amber-100 text-amber-700' },
@@ -52,21 +115,20 @@ const getPaymentStatusConfig = (status: string): { label: string; color: string 
   return configs[status] ?? { label: status, color: 'bg-slate-100 text-slate-700' };
 };
 
-// Order Status Timeline
+// 5-Stage Order & Delivery Timeline Steps
 interface TimelineStep {
-  key: OrderStatus | 'CANCELLED';
+  key: string;
   label: string;
   icon: React.ReactNode;
-  timestampKey: keyof Order;
 }
 
 const TIMELINE_STEPS: TimelineStep[] = [
-  { key: 'PENDING', label: 'Đã Đặt Hàng', icon: <Clock className="w-4 h-4" />, timestampKey: 'orderedAt' },
-  { key: 'CONFIRMED', label: 'Đã Xác Nhận', icon: <CheckCircle2 className="w-4 h-4" />, timestampKey: 'confirmedAt' },
-  { key: 'COMPLETED', label: 'Hoàn Thành', icon: <Package className="w-4 h-4" />, timestampKey: 'completedAt' },
+  { key: 'PLACED', label: 'Đã Đặt Hàng', icon: <Clock className="w-4 h-4" /> },
+  { key: 'PROCESSING', label: 'Đã Xác Nhận & Đóng Gói', icon: <Boxes className="w-4 h-4" /> },
+  { key: 'DELIVERING', label: 'Đang Vận Chuyển', icon: <Truck className="w-4 h-4" /> },
+  { key: 'LOCAL_HUB', label: 'Đến Bưu Cục (Giao 24h)', icon: <Navigation className="w-4 h-4" /> },
+  { key: 'COMPLETED', label: 'Giao Thành Công', icon: <CheckCircle2 className="w-4 h-4" /> },
 ];
-
-const STATUS_ORDER: (OrderStatus | 'CANCELLED')[] = ['PENDING', 'CONFIRMED', 'COMPLETED'];
 
 export const OrderDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -81,6 +143,8 @@ export const OrderDetailPage: React.FC = () => {
   const [isReordering, setIsReordering] = useState<boolean>(false);
   const [isRetryingPayment, setIsRetryingPayment] = useState<boolean>(false);
   const [isVietQrOpen, setIsVietQrOpen] = useState<boolean>(false);
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState<boolean>(false);
+  const [isShippingModalOpen, setIsShippingModalOpen] = useState<boolean>(false);
 
   // Review modal state
   const [reviewingItem, setReviewingItem] = useState<OrderItem | null>(null);
@@ -184,11 +248,55 @@ export const OrderDetailPage: React.FC = () => {
 
   if (!order) return null;
 
-  // Tính toán bước hiện tại cho Timeline
+  // Tính toán bước hiện tại cho Timeline 5 giai đoạn liên thông Vận chuyển
   const isCancelled = order.status === 'CANCELLED';
-  const currentStepIndex = isCancelled
-    ? -1
-    : STATUS_ORDER.indexOf(order.status);
+
+  const getTimelineInfo = () => {
+    if (isCancelled) return { currentStepIndex: -1, stepDates: [] as (string | undefined)[] };
+
+    let stepIdx = 0;
+    const dates: (string | undefined)[] = [order.orderedAt, undefined, undefined, undefined, undefined];
+
+    if (order.status === 'PENDING') {
+      stepIdx = 0;
+    } else if (order.status === 'CONFIRMED') {
+      stepIdx = 1;
+      dates[1] = order.confirmedAt;
+
+      const shipping = order.shippingOrder;
+      if (shipping) {
+        if (shipping.status === 'READY_TO_PICK' || shipping.status === 'PICKING') {
+          stepIdx = 1;
+          dates[1] = shipping.pickedAt || order.confirmedAt;
+        } else if (shipping.status === 'DELIVERING') {
+          stepIdx = 2;
+          dates[1] = order.confirmedAt;
+          dates[2] = shipping.pickedAt || shipping.updatedAt;
+        } else if (shipping.status === 'ARRIVED_AT_LOCAL_HUB') {
+          stepIdx = 3;
+          dates[1] = order.confirmedAt;
+          dates[2] = shipping.pickedAt;
+          dates[3] = shipping.updatedAt;
+        } else if (shipping.status === 'DELIVERED') {
+          stepIdx = 4;
+          dates[1] = order.confirmedAt;
+          dates[2] = shipping.pickedAt;
+          dates[3] = shipping.updatedAt;
+          dates[4] = shipping.deliveredAt || order.completedAt;
+        }
+      }
+    } else if (order.status === 'COMPLETED') {
+      stepIdx = 4;
+      dates[1] = order.confirmedAt;
+      dates[2] = order.shippingOrder?.pickedAt;
+      dates[3] = order.shippingOrder?.updatedAt;
+      dates[4] = order.completedAt || order.shippingOrder?.deliveredAt;
+    }
+
+    return { currentStepIndex: stepIdx, stepDates: dates };
+  };
+
+  const { currentStepIndex, stepDates } = getTimelineInfo();
 
   const paymentStatusCfg = getPaymentStatusConfig(order.paymentStatus);
 
@@ -251,19 +359,29 @@ export const OrderDetailPage: React.FC = () => {
 
           {/* Re-order button */}
           {order.status === 'COMPLETED' && (
-            <button
-              type="button"
-              onClick={handleReorder}
-              disabled={isReordering}
-              className="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-xl border border-emerald-200 transition-colors disabled:opacity-50"
-            >
-              {isReordering ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <RotateCcw className="w-3.5 h-3.5" />
-              )}
-              Mua lại
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => setIsReturnModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-xl border border-amber-200 transition-colors"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-amber-600" />
+                Đổi trả / Bảo hành
+              </button>
+              <button
+                type="button"
+                onClick={handleReorder}
+                disabled={isReordering}
+                className="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-xl border border-emerald-200 transition-colors disabled:opacity-50"
+              >
+                {isReordering ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <RotateCcw className="w-3.5 h-3.5" />
+                )}
+                Mua lại
+              </button>
+            </>
           )}
 
           {/* Cancel button */}
@@ -311,8 +429,21 @@ export const OrderDetailPage: React.FC = () => {
       )}
 
       {/* Order Status Timeline */}
-      <div className="bg-white border border-gray-200/80 rounded-2xl p-5 shadow-sm">
-        <h2 className="text-sm font-bold text-slate-900 mb-5">Trạng Thái Đơn Hàng</h2>
+      <div className="bg-white border border-gray-200/80 rounded-2xl p-5 shadow-sm space-y-5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-bold text-slate-900">Trạng Thái Đơn Hàng</h2>
+          {order.shippingOrder && (
+            <button
+              type="button"
+              onClick={() => setIsShippingModalOpen(true)}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-xl border border-emerald-200 transition-colors"
+            >
+              <Truck className="w-3.5 h-3.5" />
+              <span>Tra cứu hành trình vận chuyển</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
 
         {isCancelled ? (
           <div className="flex items-center gap-3 p-4 bg-rose-50 border border-rose-200 rounded-xl">
@@ -330,47 +461,93 @@ export const OrderDetailPage: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="flex items-start gap-0">
-            {TIMELINE_STEPS.map((step, index) => {
-              const isDone = index <= currentStepIndex;
-              const isCurrent = index === currentStepIndex;
-              const timestamp = order[step.timestampKey] as string | undefined;
-              const isLast = index === TIMELINE_STEPS.length - 1;
+          <>
+            <div className="flex items-start gap-0">
+              {TIMELINE_STEPS.map((step, index) => {
+                const isDone = index <= currentStepIndex;
+                const isCurrent = index === currentStepIndex;
+                const timestamp = stepDates[index];
+                const isLast = index === TIMELINE_STEPS.length - 1;
 
-              return (
-                <div key={step.key} className="flex-1 flex flex-col items-center">
-                  {/* Connector + Circle */}
-                  <div className="flex items-center w-full">
-                    {index > 0 && (
-                      <div className={`flex-1 h-1 ${isDone ? 'bg-emerald-500' : 'bg-gray-200'}`} />
-                    )}
-                    <div
-                      className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
-                        isDone
-                          ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                          : 'bg-gray-100 text-gray-400'
-                      } ${isCurrent ? 'ring-2 ring-emerald-300 ring-offset-2' : ''}`}
-                    >
-                      {step.icon}
+                return (
+                  <div key={step.key} className="flex-1 flex flex-col items-center">
+                    {/* Connector + Circle */}
+                    <div className="flex items-center w-full">
+                      {index > 0 && (
+                        <div className={`flex-1 h-1 ${isDone ? 'bg-emerald-500' : 'bg-gray-200'}`} />
+                      )}
+                      <div
+                        className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
+                          isDone
+                            ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                            : 'bg-gray-100 text-gray-400'
+                        } ${isCurrent ? 'ring-2 ring-emerald-300 ring-offset-2' : ''}`}
+                      >
+                        {step.icon}
+                      </div>
+                      {!isLast && (
+                        <div className={`flex-1 h-1 ${index < currentStepIndex ? 'bg-emerald-500' : 'bg-gray-200'}`} />
+                      )}
                     </div>
-                    {!isLast && (
-                      <div className={`flex-1 h-1 ${index < currentStepIndex ? 'bg-emerald-500' : 'bg-gray-200'}`} />
-                    )}
-                  </div>
 
-                  {/* Label + Timestamp */}
-                  <div className="text-center mt-2 px-1">
-                    <p className={`text-[11px] font-bold ${isDone ? 'text-emerald-700' : 'text-slate-400'}`}>
-                      {step.label}
+                    {/* Label + Timestamp */}
+                    <div className="text-center mt-2 px-1">
+                      <p className={`text-[10px] sm:text-[11px] font-bold ${isDone ? 'text-emerald-700' : 'text-slate-400'} leading-tight`}>
+                        {step.label}
+                      </p>
+                      {timestamp && isDone && (
+                        <p className="text-[9px] sm:text-[10px] text-slate-400 mt-0.5">{formatDate(timestamp)}</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Live Shipping Callout Banner */}
+            {order.shippingOrder && (
+              <div className="p-4 bg-slate-50 border border-slate-200/90 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Truck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-bold text-slate-900">
+                        {getCarrierLabel(order.shippingOrder.carrier)}
+                      </span>
+                      <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg">
+                        #{order.shippingOrder.trackingNumber}
+                      </span>
+                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${getShippingStatusConfig(order.shippingOrder.status).color}`}>
+                        {getShippingStatusConfig(order.shippingOrder.status).label}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 mt-1">
+                      {order.shippingOrder.logs && order.shippingOrder.logs.length > 0
+                        ? order.shippingOrder.logs[order.shippingOrder.logs.length - 1].note
+                        : getShippingStatusConfig(order.shippingOrder.status).desc}
                     </p>
-                    {timestamp && isDone && (
-                      <p className="text-[10px] text-slate-400 mt-0.5">{formatDate(timestamp)}</p>
+                    {order.shippingOrder.estimatedDeliveryAt && (
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Dự kiến giao: <span className="font-semibold text-slate-700">{formatDate(order.shippingOrder.estimatedDeliveryAt)}</span>
+                      </p>
                     )}
                   </div>
                 </div>
-              );
-            })}
-          </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsShippingModalOpen(true)}
+                  className="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold rounded-xl shadow-sm flex items-center gap-1.5 whitespace-nowrap transition-all"
+                >
+                  <Navigation className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Xem hành trình bưu cục</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -457,6 +634,63 @@ export const OrderDetailPage: React.FC = () => {
 
         {/* Thông tin phụ */}
         <div className="space-y-4">
+          {/* Thông tin vận chuyển */}
+          {order.shippingOrder && (
+            <div className="bg-white border border-gray-200/80 rounded-2xl shadow-sm p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold text-slate-900 flex items-center gap-2">
+                  <Truck className="w-3.5 h-3.5 text-emerald-600" />
+                  Thông Tin Vận Chuyển
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setIsShippingModalOpen(true)}
+                  className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 transition-colors"
+                >
+                  Chi tiết →
+                </button>
+              </div>
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between text-slate-600">
+                  <span>Đơn vị:</span>
+                  <span className="font-bold text-slate-900">
+                    {getCarrierLabel(order.shippingOrder.carrier)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-slate-600">
+                  <span>Mã vận đơn:</span>
+                  <span className="font-mono font-bold text-emerald-700">
+                    #{order.shippingOrder.trackingNumber}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-slate-600">
+                  <span>Trạng thái:</span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${getShippingStatusConfig(order.shippingOrder.status).color}`}>
+                    {getShippingStatusConfig(order.shippingOrder.status).label}
+                  </span>
+                </div>
+                {order.shippingOrder.estimatedDeliveryAt && (
+                  <div className="flex justify-between text-slate-600">
+                    <span>Dự kiến giao:</span>
+                    <span className="font-semibold text-slate-900">
+                      {formatDate(order.shippingOrder.estimatedDeliveryAt)}
+                    </span>
+                  </div>
+                )}
+                <div className="pt-2 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => setIsShippingModalOpen(true)}
+                    className="w-full py-2 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs rounded-xl border border-emerald-200 shadow-sm transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <Navigation className="w-3.5 h-3.5" />
+                    <span>Tra cứu hành trình vận đơn</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Địa chỉ giao hàng */}
           <div className="bg-white border border-gray-200/80 rounded-2xl shadow-sm p-4 space-y-3">
             <h3 className="text-xs font-bold text-slate-900 flex items-center gap-2">
@@ -558,6 +792,30 @@ export const OrderDetailPage: React.FC = () => {
             showToast('Thanh toán đơn hàng thành công!', 'success');
             fetchOrder();
           }}
+        />
+      )}
+
+      {/* Return & Warranty Modal */}
+      {isReturnModalOpen && order && (
+        <ReturnRequestModal
+          orderId={order.id}
+          orderCode={order.orderCode}
+          defaultAddress={order.deliveryAddress}
+          defaultName={order.recipientName}
+          defaultPhone={order.recipientPhone}
+          onClose={() => setIsReturnModalOpen(false)}
+          onSuccess={() => {
+            fetchOrder();
+            navigate('/profile/returns');
+          }}
+        />
+      )}
+
+      {/* Shipping Tracking Modal */}
+      {isShippingModalOpen && order?.shippingOrder && (
+        <ShippingTrackingModal
+          trackingNumber={order.shippingOrder.trackingNumber}
+          onClose={() => setIsShippingModalOpen(false)}
         />
       )}
     </div>

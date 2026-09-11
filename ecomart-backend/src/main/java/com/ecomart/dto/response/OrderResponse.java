@@ -35,4 +35,5 @@ public class OrderResponse {
     private LocalDateTime paidAt;
     private List<OrderItemResponse> items;
     private List<PaymentTransactionResponse> paymentTransactions;
+    private ShippingOrderResponse shippingOrder;
 }

@@ -10,7 +10,7 @@ target/
 .idea/
 *.iml
 *.iws
-*.ipr
+.ipr
 .vscode/
 .settings/
 .classpath
@@ -25,13 +25,7 @@ target/
 *.md
 HELP.md
 
-# ── Docker / IaC ──
+# ── Docker ──
 compose.yaml
 Dockerfile
 .dockerignore
-render.yaml
-
-# ── CI/CD ──
-.github/
-.gitlab-ci.yml
-

@@ -34,13 +34,12 @@ services:
     ports:
       - '8081:8081'
     env_file:
-      - ./.env
+      - ./ecomart-backend/.env
     environment:
       SERVER_PORT: 8081
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ecomart_db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgrespassword
-      APP_JWT_SECRET: ${APP_JWT_SECRET}
       APP_JWT_EXPIRATION_MS: 86400000
       APP_JWT_REFRESH_EXPIRATION_MS: 604800000
     depends_on:
@@ -59,7 +58,7 @@ services:
     container_name: ecomart-frontend
     restart: unless-stopped
     ports:
-      - '3000:80'
+      - '3000:443'
     depends_on:
       - backend
     networks:

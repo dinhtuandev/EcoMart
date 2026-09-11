@@ -33,5 +33,3 @@ pnpm-debug.log*
 # Cache của Vite/ESLint
 .eslintcache
 .vite/
-# File env gốc (đã track trước đây — cần git rm --cached .env để ngừng track)
-.env

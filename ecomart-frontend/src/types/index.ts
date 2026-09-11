@@ -154,6 +154,7 @@ export interface Order {
   paidAt?: string;
   items: OrderItem[];
   paymentTransactions: PaymentTransaction[];
+  shippingOrder?: ShippingOrder;
 }
 
 /**
@@ -209,7 +210,8 @@ export interface User {
   fullName: string;
   email: string;
   phoneNumber?: string;
-  role: 'CUSTOMER' | 'ADMIN';
+  avatarUrl?: string;
+  role: 'CUSTOMER' | 'MANAGER' | 'ADMIN';
   isEmailVerified: boolean;
   isActive: boolean;
   createdAt?: string;
@@ -224,6 +226,18 @@ export interface AuthResponse {
   tokenType: string;
   expiresIn: number;
   user: User;
+}
+
+export type AuthProvider = 'LOCAL' | 'GOOGLE' | 'FACEBOOK';
+
+export interface SocialLoginPayload {
+  provider: 'GOOGLE' | 'FACEBOOK';
+  token: string;
+}
+
+export interface SocialConfigResponse {
+  googleClientId?: string;
+  facebookAppId?: string;
 }
 
 /**
@@ -1182,5 +1196,192 @@ export interface AdminInventoryFilterParams {
   pageSize?: number;
   keyword?: string;
   lowStockOnly?: boolean;
+}
+
+// ==========================================
+// MODULE 13: RETURN, WARRANTY & SHIPPING TYPES
+// ==========================================
+
+export type PolicyType = 'RETURN' | 'WARRANTY';
+export type FeeBearer = 'SHOP' | 'CUSTOMER' | 'SPLIT_50_50';
+export type ReturnRequestType = 'RETURN_REFUND' | 'RETURN_EXCHANGE' | 'WARRANTY';
+export type ReturnRequestStatus =
+  | 'PENDING'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'PICKING'
+  | 'RETURNING'
+  | 'QC_INSPECTING'
+  | 'QC_PASSED'
+  | 'QC_FAILED'
+  | 'COMPLETED'
+  | 'CANCELLED';
+
+export type ShippingType = 'FORWARD' | 'REVERSE';
+export type ShippingCarrier = 'ECO_EXPRESS' | 'GHN' | 'GHTK' | 'VIETTEL_POST';
+export type ShippingStatus =
+  | 'READY_TO_PICK'
+  | 'PICKING'
+  | 'DELIVERING'
+  | 'ARRIVED_AT_LOCAL_HUB'
+  | 'DELIVERED'
+  | 'DELIVERY_FAILED'
+  | 'RETURNED_TO_SENDER'
+  | 'CANCELLED';
+
+export interface Policy {
+  id: number;
+  name: string;
+  policyType: PolicyType;
+  durationDays: number;
+  categoryId?: number;
+  categoryName?: string;
+  productId?: number;
+  productName?: string;
+  shippingFeeBearer: FeeBearer;
+  conditionsDescription?: string;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface PolicyPayload {
+  name: string;
+  policyType: PolicyType;
+  durationDays: number;
+  categoryId?: number;
+  productId?: number;
+  shippingFeeBearer: FeeBearer;
+  conditionsDescription?: string;
+  isActive?: boolean;
+}
+
+export interface ReturnItemEligibility {
+  orderItemId: number;
+  productId: number;
+  productName: string;
+  productImageUrl?: string;
+  unitPrice: number;
+  purchasedQuantity: number;
+  availableReturnQuantity: number;
+  returnEligibleUntil?: string;
+  isReturnEligible?: boolean;
+  returnEligible?: boolean;
+  warrantyEligibleUntil?: string;
+  isWarrantyEligible?: boolean;
+  warrantyEligible?: boolean;
+  returnPolicyName?: string;
+  warrantyPolicyName?: string;
+  conditions?: string;
+}
+
+export interface ReturnEligibilityResponse {
+  orderId: number;
+  orderCode: string;
+  orderCompletedAt?: string;
+  isEligibleForAny?: boolean;
+  eligibleForAny?: boolean;
+  items: ReturnItemEligibility[];
+  standardReasons: string[];
+}
+
+export interface ReturnItemPayload {
+  orderItemId: number;
+  quantity: number;
+}
+
+export interface CreateReturnPayload {
+  orderId: number;
+  requestType: ReturnRequestType;
+  reason: string;
+  customerNote?: string;
+  items: ReturnItemPayload[];
+  evidenceUrls: string[];
+  pickupAddress?: string;
+  pickupContactName?: string;
+  pickupContactPhone?: string;
+}
+
+export interface ReturnRequestItem {
+  id: number;
+  orderItemId: number;
+  productId: number;
+  productName: string;
+  productImageUrl?: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+}
+
+export interface ReturnRequestEvidence {
+  id: number;
+  mediaUrl: string;
+  mediaType: string;
+  createdAt?: string;
+}
+
+export interface ShippingLog {
+  id: number;
+  status: ShippingStatus;
+  location?: string;
+  note?: string;
+  timestamp: string;
+}
+
+export interface ShippingOrder {
+  id: number;
+  trackingNumber: string;
+  orderId?: number;
+  orderCode?: string;
+  returnRequestId?: number;
+  returnRequestCode?: string;
+  shippingType: ShippingType;
+  carrier: ShippingCarrier;
+  status: ShippingStatus;
+  senderName: string;
+  senderPhone: string;
+  senderAddress: string;
+  receiverName: string;
+  receiverPhone: string;
+  receiverAddress: string;
+  shippingFee: number;
+  feeBearer: FeeBearer;
+  codAmount: number;
+  estimatedDeliveryAt?: string;
+  pickedAt?: string;
+  deliveredAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  logs?: ShippingLog[];
+}
+
+export interface ReturnRequest {
+  id: number;
+  requestCode: string;
+  orderId: number;
+  orderCode: string;
+  userId: number;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  requestType: ReturnRequestType;
+  status: ReturnRequestStatus;
+  reason: string;
+  customerNote?: string;
+  refundAmount?: number;
+  pickupAddress: string;
+  pickupContactName: string;
+  pickupContactPhone: string;
+  adminNote?: string;
+  rejectionReason?: string;
+  qcNotes?: string;
+  qcPassed?: boolean;
+  createdAt: string;
+  updatedAt?: string;
+  approvedAt?: string;
+  completedAt?: string;
+  items: ReturnRequestItem[];
+  evidences: ReturnRequestEvidence[];
+  reverseShipping?: ShippingOrder;
 }
 

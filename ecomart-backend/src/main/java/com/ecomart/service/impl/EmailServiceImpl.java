@@ -59,6 +59,78 @@ public class EmailServiceImpl implements EmailService {
         sendEmailViaSmtp(toEmail, subject, htmlContent, otpCode, "PASSWORD_RESET");
     }
 
+    @Async
+    @Override
+    public void sendReturnRequestCreated(String toEmail, String fullName, String requestCode, String orderCode) {
+        String subject = "[EcoMart] Đã tiếp nhận yêu cầu đổi trả/bảo hành " + requestCode;
+        String html = buildNotificationEmailTemplate(
+                fullName,
+                "Chúng tôi đã tiếp nhận yêu cầu đổi trả/bảo hành #" + requestCode + " cho đơn hàng #" + orderCode + ".",
+                "Nhân viên CSKH EcoMart đang xử lý yêu cầu của bạn và sẽ phản hồi trong vòng 24 giờ làm việc.",
+                "Bạn có thể theo dõi trạng thái yêu cầu tại mục 'Đổi trả & Bảo hành' trong tài khoản cá nhân."
+        );
+        sendEmailViaSmtp(toEmail, subject, html, requestCode, "RETURN_REQUEST_CREATED");
+    }
+
+    @Async
+    @Override
+    public void sendReturnRequestApproved(String toEmail, String fullName, String requestCode, String trackingNumber) {
+        String subject = "[EcoMart] Yêu cầu đổi trả/bảo hành " + requestCode + " đã được DUYỆT";
+        String html = buildNotificationEmailTemplate(
+                fullName,
+                "Yêu cầu đổi trả/bảo hành #" + requestCode + " của bạn đã được phê duyệt.",
+                "Mã vận đơn thu hồi: <strong>" + trackingNumber + "</strong>. Bưu tá EcoMart Express sẽ liên hệ với bạn để lấy kiện hàng tại địa chỉ đã đăng ký.",
+                "Vui lòng đóng gói sản phẩm cẩn thận kèm phụ kiện và hóa đơn (nếu có) trước khi giao cho bưu tá."
+        );
+        sendEmailViaSmtp(toEmail, subject, html, trackingNumber, "RETURN_REQUEST_APPROVED");
+    }
+
+    @Async
+    @Override
+    public void sendReturnRequestRejected(String toEmail, String fullName, String requestCode, String reason) {
+        String subject = "[EcoMart] Thông báo về yêu cầu đổi trả/bảo hành " + requestCode;
+        String html = buildNotificationEmailTemplate(
+                fullName,
+                "Rất tiếc, yêu cầu đổi trả/bảo hành #" + requestCode + " của bạn chưa đủ điều kiện để phê duyệt.",
+                "Lý do: <em>" + reason + "</em>",
+                "Nếu bạn có thắc mắc cần hỗ trợ thêm, vui lòng liên hệ hotline EcoMart để được giải đáp."
+        );
+        sendEmailViaSmtp(toEmail, subject, html, requestCode, "RETURN_REQUEST_REJECTED");
+    }
+
+    @Async
+    @Override
+    public void sendReturnQCResult(String toEmail, String fullName, String requestCode, boolean passed, String action, String notes) {
+        String subject = passed
+                ? "[EcoMart] Kiểm định sản phẩm " + requestCode + " thành công - Xử lý " + action
+                : "[EcoMart] Kết quả kiểm định sản phẩm " + requestCode + " không đạt";
+
+        String detail = passed
+                ? "Kho EcoMart đã nhận được kiện hàng và kiểm định chất lượng (QC) đạt yêu cầu. Hệ thống đang tiến hành xử lý bước tiếp theo (" + action + ")."
+                : "Kiểm tra thực tế sản phẩm không đạt điều kiện đổi trả/bảo hành. Ghi chú: " + notes + ". Sản phẩm sẽ được gửi trả lại bạn.";
+
+        String html = buildNotificationEmailTemplate(fullName, detail, "Ghi chú từ bộ phận QC: " + notes, "Cảm ơn bạn đã tin tưởng mua sắm tại EcoMart.");
+        sendEmailViaSmtp(toEmail, subject, html, requestCode, "RETURN_QC_RESULT");
+    }
+
+    private String buildNotificationEmailTemplate(String name, String line1, String line2, String note) {
+        return "<div style=\"font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background-color: #f9fafb; border-radius: 12px; border: 1px solid #e5e7eb;\">"
+                + "<div style=\"text-align: center; margin-bottom: 24px;\">"
+                + "<h1 style=\"color: #16a34a; font-size: 28px; margin: 0; font-weight: 800; letter-spacing: -0.5px;\">🌿 EcoMart</h1>"
+                + "<p style=\"color: #4b5563; font-size: 14px; margin-top: 4px;\">Hệ Thống Đổi Trả & Bảo Hành</p>"
+                + "</div>"
+                + "<div style=\"background-color: #ffffff; padding: 32px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);\">"
+                + "<h2 style=\"color: #111827; font-size: 18px; margin-top: 0;\">Xin chào " + (name != null ? name : "Quý khách") + ",</h2>"
+                + "<p style=\"color: #374151; font-size: 15px; line-height: 1.6;\">" + line1 + "</p>"
+                + "<p style=\"color: #374151; font-size: 15px; line-height: 1.6;\">" + line2 + "</p>"
+                + "<p style=\"color: #6b7280; font-size: 13px; line-height: 1.5; margin-top: 16px;\">" + note + "</p>"
+                + "</div>"
+                + "<div style=\"text-align: center; margin-top: 24px; color: #9ca3af; font-size: 12px;\">"
+                + "<p>© 2026 EcoMart. Mua Sắm Bền Vững - An Tâm Tiêu Dùng.</p>"
+                + "</div>"
+                + "</div>";
+    }
+
     private void sendEmailViaSmtp(String toEmail, String subject, String htmlContent, String otpCode, String type) {
         // Dev fallback: Nếu chưa cấu hình MAIL_USERNAME hoặc MAIL_PASSWORD, log OTP ra console để dev test tiện lợi
         if (mailUsername == null || mailUsername.isBlank() || mailPassword == null || mailPassword.isBlank()) {

@@ -55,6 +55,10 @@ class OrderServiceTest {
     private InventoryRepository inventoryRepository;
     @Mock
     private PaymentService paymentService;
+    @Mock
+    private com.ecomart.service.PolicyService policyService;
+    @Mock
+    private com.ecomart.service.ShippingService shippingService;
 
     @InjectMocks
     private OrderServiceImpl orderService;
@@ -133,7 +137,7 @@ class OrderServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(addressRepository.findById(10L)).thenReturn(Optional.of(address));
         when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
-        when(inventoryRepository.findByProductId(100L)).thenReturn(Optional.of(inventory));
+        when(inventoryRepository.findAllByProductIdsWithLock(anyCollection())).thenReturn(List.of(inventory));
         when(orderRepository.save(any(Order.class))).thenReturn(order);
 
         CreateOrderResponse response = orderService.createOrder(1L, request);
@@ -142,7 +146,7 @@ class OrderServiceTest {
         assertThat(response.getOrder()).isNotNull();
         assertThat(response.getPaymentUrl()).isNull();
         assertThat(inventory.getQuantity()).isEqualTo(8); // 10 - 2 = 8
-        verify(inventoryRepository, times(1)).save(inventory);
+        verify(inventoryRepository, times(1)).saveAll(anyCollection());
         verify(cartItemRepository, times(1)).deleteAllByCartId(1L);
     }
 
@@ -159,7 +163,7 @@ class OrderServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(addressRepository.findById(10L)).thenReturn(Optional.of(address));
         when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
-        when(inventoryRepository.findByProductId(100L)).thenReturn(Optional.of(inventory));
+        when(inventoryRepository.findAllByProductIdsWithLock(anyCollection())).thenReturn(List.of(inventory));
         when(orderRepository.save(any(Order.class))).thenReturn(order);
         when(paymentTransactionRepository.save(any(PaymentTransaction.class))).thenReturn(PaymentTransaction.builder().build());
         when(paymentService.createVNPayPaymentUrl(any(), any(), any())).thenReturn("https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?test=1");
@@ -214,7 +218,7 @@ class OrderServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(addressRepository.findById(10L)).thenReturn(Optional.of(address));
         when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
-        when(inventoryRepository.findByProductId(100L)).thenReturn(Optional.of(inventory));
+        when(inventoryRepository.findAllByProductIdsWithLock(anyCollection())).thenReturn(List.of(inventory));
 
         assertThatThrownBy(() -> orderService.createOrder(1L, request))
                 .isInstanceOf(UnprocessableEntityException.class)
@@ -237,10 +241,40 @@ class OrderServiceTest {
     }
 
     @Test
+    @DisplayName("Đặt hàng nhiều sản phẩm: các ID sản phẩm được sắp xếp tăng dần trước khi khóa để chống deadlock")
+    void createOrder_SortsProductIdsBeforeLocking_ToPreventDeadlocks() {
+        Product p1 = Product.builder().id(200L).name("Sản phẩm 200").sellingPrice(BigDecimal.valueOf(50000)).isVisible(true).build();
+        Product p2 = Product.builder().id(100L).name("Sản phẩm 100").sellingPrice(BigDecimal.valueOf(30000)).isVisible(true).build();
+
+        CartItem item1 = CartItem.builder().id(11L).cart(cart).product(p1).quantity(1).build();
+        CartItem item2 = CartItem.builder().id(12L).cart(cart).product(p2).quantity(1).build();
+
+        cart.getItems().clear();
+        cart.getItems().add(item1); // ID 200 trước
+        cart.getItems().add(item2); // ID 100 sau
+
+        Inventory inv1 = Inventory.builder().id(1L).product(p1).quantity(10).build();
+        Inventory inv2 = Inventory.builder().id(2L).product(p2).quantity(10).build();
+
+        CreateOrderRequest request = CreateOrderRequest.builder().addressId(10L).paymentMethod(PaymentMethod.COD).build();
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(addressRepository.findById(10L)).thenReturn(Optional.of(address));
+        when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
+        when(inventoryRepository.findAllByProductIdsWithLock(List.of(100L, 200L))).thenReturn(List.of(inv2, inv1));
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+        CreateOrderResponse response = orderService.createOrder(1L, request);
+
+        assertThat(response).isNotNull();
+        // Kiểm tra chắc chắn findAllByProductIdsWithLock được gọi với danh sách đã sort tăng dần [100L, 200L]
+        verify(inventoryRepository, times(1)).findAllByProductIdsWithLock(List.of(100L, 200L));
+    }
+
+    @Test
     @DisplayName("Khách hàng hủy đơn PENDING thành công: hoàn tồn kho")
     void cancelCustomerOrder_Success_RestoresStock() {
         when(orderRepository.findById(1000L)).thenReturn(Optional.of(order));
-        when(inventoryRepository.findByProductId(100L)).thenReturn(Optional.of(inventory));
         when(orderRepository.save(any(Order.class))).thenReturn(order);
 
         OrderResponse response = orderService.cancelCustomerOrder(1L, 1000L);
@@ -248,8 +282,7 @@ class OrderServiceTest {
         assertThat(response).isNotNull();
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
         assertThat(order.getCancellationReason()).isEqualTo("Khách hàng hủy đơn");
-        assertThat(inventory.getQuantity()).isEqualTo(12); // 10 + 2 = 12
-        verify(inventoryRepository, times(1)).save(inventory);
+        verify(inventoryRepository, times(1)).incrementStock(100L, 2);
     }
 
     @Test
@@ -294,7 +327,6 @@ class OrderServiceTest {
         AdminCancelOrderRequest request = AdminCancelOrderRequest.builder().cancellationReason("Hết hàng đột xuất").build();
 
         when(orderRepository.findById(1000L)).thenReturn(Optional.of(order));
-        when(inventoryRepository.findByProductId(100L)).thenReturn(Optional.of(inventory));
         when(orderRepository.save(any(Order.class))).thenReturn(order);
 
         OrderResponse response = orderService.cancelAdminOrder(1000L, request);
@@ -302,8 +334,7 @@ class OrderServiceTest {
         assertThat(response).isNotNull();
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
         assertThat(order.getCancellationReason()).isEqualTo("Hết hàng đột xuất");
-        assertThat(inventory.getQuantity()).isEqualTo(12);
-        verify(inventoryRepository, times(1)).save(inventory);
+        verify(inventoryRepository, times(1)).incrementStock(100L, 2);
     }
 
     @Test
@@ -337,5 +368,47 @@ class OrderServiceTest {
 
         assertThat(response).isNotNull();
         assertThat(order.getPaymentStatus()).isEqualTo(PaymentStatus.REFUNDED);
+    }
+
+    @Test
+    @DisplayName("Admin duyệt thanh toán online PENDING: đổi paymentStatus = PAID nhưng giữ status = PENDING")
+    void approvePayment_Success_OnlineOrder() {
+        order.setPaymentMethod(PaymentMethod.SEPAY);
+        order.setPaymentStatus(PaymentStatus.UNPAID);
+        order.setStatus(OrderStatus.PENDING);
+
+        when(orderRepository.findById(1000L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+        OrderResponse response = orderService.approvePayment(1000L);
+
+        assertThat(response).isNotNull();
+        assertThat(order.getPaymentStatus()).isEqualTo(PaymentStatus.PAID);
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.PENDING);
+        assertThat(order.getPaidAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("Ném 409 khi duyệt thanh toán cho đơn COD")
+    void approvePayment_Throws409_WhenCOD() {
+        order.setPaymentMethod(PaymentMethod.COD);
+        order.setPaymentStatus(PaymentStatus.UNPAID);
+        when(orderRepository.findById(1000L)).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderService.approvePayment(1000L))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("COD chỉ được ghi nhận thanh toán khi giao hàng thành công");
+    }
+
+    @Test
+    @DisplayName("Ném 409 khi duyệt thanh toán cho đơn đã PAID")
+    void approvePayment_Throws409_WhenAlreadyPaid() {
+        order.setPaymentMethod(PaymentMethod.SEPAY);
+        order.setPaymentStatus(PaymentStatus.PAID);
+        when(orderRepository.findById(1000L)).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderService.approvePayment(1000L))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("Đơn hàng đã ở trạng thái Đã thanh toán (PAID)");
     }
 }

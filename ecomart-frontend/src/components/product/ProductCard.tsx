@@ -1,10 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingBag, Sparkles } from 'lucide-react';
+import { ShoppingBag, Sparkles, Eye } from 'lucide-react';
 import { Product } from '../../types';
 import { EcoScoreBadge } from './EcoScoreBadge';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
+import { useStorePreview } from '../../hooks/useStorePreview';
 
 export interface ProductCardProps {
   product: Product;
@@ -14,6 +15,7 @@ export interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = 'grid' }) => {
   const { handleAddToCart } = useCart();
   const { showToast } = useToast();
+  const { isPreview } = useStorePreview();
 
   const primaryImg =
     product.images?.find((img) => img.isPrimary)?.imageUrl ||
@@ -143,15 +145,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = 'g
             </span>
           </div>
 
-          <button
-            type="button"
-            onClick={onAddToCartClick}
-            disabled={product.quantityInStock <= 0}
-            className="w-full py-2.5 px-4 bg-slate-900 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm active:scale-[0.98]"
-          >
-            <ShoppingBag className="w-4 h-4" />
-            <span>{product.quantityInStock > 0 ? 'Thêm Vào Giỏ' : 'Tạm Hết Hàng'}</span>
-          </button>
+          {isPreview ? (
+            <Link
+              to={`/products/${product.id}`}
+              className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              <Eye className="w-4 h-4" />
+              <span>Xem chi tiết</span>
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={onAddToCartClick}
+              disabled={product.quantityInStock <= 0}
+              className="w-full py-2.5 px-4 bg-slate-900 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm active:scale-[0.98]"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              <span>{product.quantityInStock > 0 ? 'Thêm Vào Giỏ' : 'Tạm Hết Hàng'}</span>
+            </button>
+          )}
         </div>
       </div>
     );
@@ -258,15 +270,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = 'g
           </span>
         </div>
 
-        <button
-          type="button"
-          onClick={onAddToCartClick}
-          disabled={product.quantityInStock <= 0}
-          className="w-full py-2 px-3 bg-slate-900 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98]"
-        >
-          <ShoppingBag className="w-3.5 h-3.5" />
-          <span>{product.quantityInStock > 0 ? 'Thêm Vào Giỏ' : 'Tạm Hết Hàng'}</span>
-        </button>
+        {isPreview ? (
+          <Link
+            to={`/products/${product.id}`}
+            className="w-full py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5"
+          >
+            <Eye className="w-3.5 h-3.5" />
+            <span>Xem chi tiết</span>
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={onAddToCartClick}
+            disabled={product.quantityInStock <= 0}
+            className="w-full py-2 px-3 bg-slate-900 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98]"
+          >
+            <ShoppingBag className="w-3.5 h-3.5" />
+            <span>{product.quantityInStock > 0 ? 'Thêm Vào Giỏ' : 'Tạm Hết Hàng'}</span>
+          </button>
+        )}
       </div>
     </div>
   );
